@@ -29,7 +29,7 @@ pub enum JevOpsError {
     #[error("Input error: {0}")]
     Input(String),
 
-    #[error("Input too large ({bytes} bytes exceeds limit of {max_bytes} bytes)")]
+    #[error("Input too large ({bytes} bytes exceeds limit of {max_bytes} bytes). SRE Tip: pipe the latest log window using 'tail -n 200' or 'tail -c 500K' (e.g. tail -n 200 /var/log/secure | jev-ops analyze linux)")]
     InputTooLarge { bytes: usize, max_bytes: usize },
 
     #[error("Input is empty. Provide diagnostic data via stdin or --input")]
