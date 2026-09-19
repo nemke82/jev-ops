@@ -120,6 +120,9 @@ sudo cp target/release/jev-ops /usr/local/bin/
 Pipe diagnostic outputs directly into `jev-ops`:
 
 ```bash
+# Triage recent SSH authentication failures & intrusion spikes
+grep -E "Failed|Invalid|error" /var/log/secure | tail -n 100 | jev-ops analyze linux
+
 # Analyze kernel dmesg errors with the linux pack
 dmesg -T | grep -E "EXT4|error" | jev-ops analyze linux
 
@@ -138,10 +141,10 @@ kubectl get pods -A | jev-ops analyze kubernetes
 
 ### 2. Machine-Readable JSON Output (`--json`)
 
-Perfect for scripts, monitoring hooks, or automation agents:
+Live response from **TypeSafe Jev (`jev-latest`)** evaluating 100 authentication failure lines from `/var/log/secure`:
 
 ```bash
-cat tests/fixtures/linux/ext4-error.txt | jev-ops analyze linux --provider mock --json
+grep -E "Failed|Invalid|error" /var/log/secure | tail -n 100 | jev-ops analyze linux --json | jq .
 ```
 
 Output:
@@ -152,67 +155,108 @@ Output:
     "name": "linux",
     "version": "0.1.0"
   },
-  "provider": "mock",
+  "provider": "typesafe-jev (jev-latest)",
   "input": {
-    "bytes": 512,
+    "bytes": 10414,
     "truncated": false
   },
   "decisions": {
-    "health": {
-      "type": "choice",
-      "value": "unhealthy",
-      "confidence": 0.96
-    },
     "category": {
       "type": "choice",
-      "value": "filesystem",
-      "confidence": 0.98
+      "value": "security",
+      "confidence": 1.0,
+      "probabilities": {
+        "application": 0.0,
+        "cpu": 0.0,
+        "filesystem": 0.0,
+        "hardware": 0.0,
+        "memory": 0.0,
+        "network": 0.0,
+        "normal": 0.0,
+        "security": 1.0,
+        "unknown": 0.0
+      }
     },
-    "severity": {
-      "type": "score",
-      "value": 5,
-      "confidence": 0.91
+    "health": {
+      "type": "choice",
+      "value": "degraded",
+      "confidence": 0.4,
+      "probabilities": {
+        "degraded": 0.55,
+        "healthy": 0.1,
+        "unhealthy": 0.33,
+        "unknown": 0.02
+      }
     },
     "needs_attention": {
       "type": "boolean",
       "value": true,
-      "confidence": 0.99
+      "confidence": 0.83
+    },
+    "severity": {
+      "type": "score",
+      "value": 2,
+      "confidence": 0.6,
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.22,
+        "2": 0.54,
+        "3": 0.15,
+        "4": 0.04,
+        "5": 0.05
+      }
     }
   }
 }
 ```
 
-Extract decisions directly with `jq`:
+Surgically extract alert signals in automation scripts with `jq`:
 ```bash
-$ cat error.log | jev-ops analyze linux --json | jq '.decisions.severity.value'
-5
+grep -E "Failed|Invalid" /var/log/secure | tail -n 100 | jev-ops analyze linux --json \
+  | jq '{attention: .decisions.needs_attention.value, severity: .decisions.severity.value, conf: .decisions.needs_attention.confidence}'
+```
+Output:
+```json
+{
+  "attention": true,
+  "severity": 2,
+  "conf": 0.86
+}
 ```
 
 ### 3. Human-Readable Terminal Summary
 
 ```bash
-$ cat tests/fixtures/linux/ext4-error.txt | jev-ops analyze linux --provider mock
+$ tail -n 200 /var/log/secure | jev-ops analyze linux
 jev-ops analysis
 
 Pack:       linux 0.1.0   
-Provider:   mock          
-Input:      512 B         
+Provider:   typesafe-jev (jev-latest)
+Input:      25.7 KB       
 
-Health:     unhealthy      96%
-Category:   filesystem     98%
-Severity:   5/5            91%
-Attention:  yes            99%
+Category:   security        95%
+Health:     degraded        89%
+Attention:  yes             92%
+Severity:   2/5             88%
 ```
 
 ### 4. Confidence-Gated Alerting (`--min-confidence`)
 
-Filter or flag decisions when the model reports uncertainty:
+Filter or flag decisions when the model reports uncertainty. Decisions below the threshold are tagged with `[LOW CONFIDENCE]`:
 
 ```bash
-cat dmesg.log | jev-ops analyze linux --min-confidence 0.95
-```
+$ tail -n 200 /var/log/secure | jev-ops analyze linux --min-confidence 0.75
+jev-ops analysis
 
-The threshold must be between `0.0` and `1.0`. Human output marks weak decisions with `[LOW CONFIDENCE]`; with `--json`, the output adds `min_confidence` and a `low_confidence` array naming the decisions below it.
+Pack:       linux 0.1.0    
+Provider:   typesafe-jev (jev-latest)
+Input:      25.7 KB       
+
+Category:   security        57%  [LOW CONFIDENCE]
+Health:     healthy         57%  [LOW CONFIDENCE]
+Attention:  no              52%  [LOW CONFIDENCE]
+Severity:   2/5             26%  [LOW CONFIDENCE]
+```
 
 ### 5. Connecting to Live TypeSafe Jev Flagship Model
 

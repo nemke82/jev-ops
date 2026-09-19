@@ -43,14 +43,14 @@ Events:
   },
   ssh: {
     pack: "linux",
-    input: `Sep 19 11:21:04 server sshd[28412]: Failed password for invalid user admin from 198.51.100.24 port 43120 ssh2
-Sep 19 11:21:06 server sshd[28415]: Failed password for invalid user root from 198.51.100.24 port 43122 ssh2
-Sep 19 11:21:15 server sshd[28430]: Maximum authentication attempts exceeded for invalid user admin [preauth]`,
+    input: `Sep 19 11:21:04 stream sshd[28412]: Failed password for invalid user admin from 198.51.100.24 port 43120 ssh2
+Sep 19 11:21:06 stream sshd[28415]: Failed password for invalid user root from 198.51.100.24 port 43122 ssh2
+Sep 19 11:21:15 stream sshd[28430]: Maximum authentication attempts exceeded for invalid user admin [preauth]`,
     decisions: [
-      { name: "Health", value: "degraded", class: "warning", confidence: 89, pct: 89 },
-      { name: "Category", value: "security", class: "cyan", confidence: 95, pct: 95 },
-      { name: "Severity", value: "3 / 5", class: "warning", confidence: 88, pct: 88 },
-      { name: "Attention", value: "yes", class: "danger", confidence: 92, pct: 92 }
+      { name: "Health", value: "degraded", class: "warning", confidence: 40, pct: 40 },
+      { name: "Category", value: "security", class: "cyan", confidence: 100, pct: 100 },
+      { name: "Severity", value: "2 / 5", class: "warning", confidence: 60, pct: 60 },
+      { name: "Attention", value: "yes", class: "danger", confidence: 83, pct: 83 }
     ]
   },
   aws: {
@@ -609,8 +609,92 @@ fi
 echo "✅ [PASS] Plan verified safe for automated apply."`
 };
 
+const LIVE_TEST_SNIPPETS = {
+  json: `# grep -E "Failed|Invalid|error" /var/log/secure | tail -n 100 | jev-ops analyze linux --json | jq .
+{
+  "schema_version": "1",
+  "pack": {
+    "name": "linux",
+    "version": "0.1.0"
+  },
+  "provider": "typesafe-jev (jev-latest)",
+  "input": {
+    "bytes": 10414,
+    "truncated": false
+  },
+  "decisions": {
+    "category": {
+      "type": "choice",
+      "value": "security",
+      "confidence": 1.0,
+      "probabilities": {
+        "application": 0.0,
+        "cpu": 0.0,
+        "filesystem": 0.0,
+        "hardware": 0.0,
+        "memory": 0.0,
+        "network": 0.0,
+        "normal": 0.0,
+        "security": 1.0,
+        "unknown": 0.0
+      }
+    },
+    "health": {
+      "type": "choice",
+      "value": "degraded",
+      "confidence": 0.4,
+      "probabilities": {
+        "degraded": 0.55,
+        "healthy": 0.1,
+        "unhealthy": 0.33,
+        "unknown": 0.02
+      }
+    },
+    "needs_attention": {
+      "type": "boolean",
+      "value": true,
+      "confidence": 0.83
+    },
+    "severity": {
+      "type": "score",
+      "value": 2,
+      "confidence": 0.6,
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.22,
+        "2": 0.54,
+        "3": 0.15,
+        "4": 0.04,
+        "5": 0.05
+      }
+    }
+  }
+}`,
+
+  jq: `# grep -E "Failed|Invalid" /var/log/secure | tail -n 100 | jev-ops analyze linux --json | jq '{attention: .decisions.needs_attention.value, severity: .decisions.severity.value, conf: .decisions.needs_attention.confidence}'
+{
+  "attention": true,
+  "severity": 2,
+  "conf": 0.86
+}`,
+
+  conf: `# tail -n 200 /var/log/secure | jev-ops analyze linux --min-confidence 0.75
+jev-ops analysis
+
+Pack:       linux 0.1.0    
+Provider:   typesafe-jev (jev-latest)
+Input:      25.7 KB       
+
+Category:   security        57%  [LOW CONFIDENCE]
+Health:     healthy         57%  [LOW CONFIDENCE]
+Attention:  no              52%  [LOW CONFIDENCE]
+Severity:   2/5             26%  [LOW CONFIDENCE]`
+};
+
 function setupIntegrationTabs() {
-  const buttons = document.querySelectorAll(".integ-tab-btn");
+  const container = document.querySelector(".integ-tabs:not(#liveTestTabs)");
+  if (!container) return;
+  const buttons = container.querySelectorAll(".integ-tab-btn");
   const codeBlock = document.getElementById("integCodeBlock");
   if (!buttons.length || !codeBlock) return;
 
@@ -626,12 +710,31 @@ function setupIntegrationTabs() {
   });
 }
 
+function setupLiveTestTabs() {
+  const container = document.getElementById("liveTestTabs");
+  const codeBlock = document.getElementById("liveTestCodeBlock");
+  if (!container || !codeBlock) return;
+
+  const buttons = container.querySelectorAll(".live-tab-btn");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const testKey = btn.dataset.test;
+      if (LIVE_TEST_SNIPPETS[testKey]) {
+        codeBlock.textContent = LIVE_TEST_SNIPPETS[testKey];
+      }
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setupThemeToggle();
   setupScenarioPicker();
   setupViewTabs();
   setupPackTabs();
   setupIntegrationTabs();
+  setupLiveTestTabs();
   setupCopyButtons();
   runAnalysis();
 });

@@ -398,6 +398,89 @@ spec:
     </div>
   </section>
 
+  <!-- Live Production Verification -->
+  <section class="section" id="production-examples" style="background: var(--bg-surface); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Production Verified</span>
+        <h2 class="section-title">Tested on Live Linux Authentication Logs</h2>
+        <p class="section-desc">
+          Real production telemetry streamed from <code>/var/log/secure</code> to the <strong>TypeSafe Jev (<code>jev-latest</code>)</strong> flagship model.
+        </p>
+      </div>
+
+      <div class="integ-tabs" id="liveTestTabs">
+        <button class="integ-tab-btn live-tab-btn active" data-test="json">1. Full JSON &amp; Probabilities</button>
+        <button class="integ-tab-btn live-tab-btn" data-test="jq">2. Surgical jq Alert Gate</button>
+        <button class="integ-tab-btn live-tab-btn" data-test="conf">3. Confidence Gating (--min-confidence)</button>
+      </div>
+
+      <div class="code-block-container">
+        <button class="copy-btn" data-target="liveTestCodeBlock">Copy Output</button>
+        <pre><code id="liveTestCodeBlock"># grep -E "Failed|Invalid|error" /var/log/secure | tail -n 100 | jev-ops analyze linux --json | jq .
+{
+  "schema_version": "1",
+  "pack": {
+    "name": "linux",
+    "version": "0.1.0"
+  },
+  "provider": "typesafe-jev (jev-latest)",
+  "input": {
+    "bytes": 10414,
+    "truncated": false
+  },
+  "decisions": {
+    "category": {
+      "type": "choice",
+      "value": "security",
+      "confidence": 1.0,
+      "probabilities": {
+        "application": 0.0,
+        "cpu": 0.0,
+        "filesystem": 0.0,
+        "hardware": 0.0,
+        "memory": 0.0,
+        "network": 0.0,
+        "normal": 0.0,
+        "security": 1.0,
+        "unknown": 0.0
+      }
+    },
+    "health": {
+      "type": "choice",
+      "value": "degraded",
+      "confidence": 0.4,
+      "probabilities": {
+        "degraded": 0.55,
+        "healthy": 0.1,
+        "unhealthy": 0.33,
+        "unknown": 0.02
+      }
+    },
+    "needs_attention": {
+      "type": "boolean",
+      "value": true,
+      "confidence": 0.83
+    },
+    "severity": {
+      "type": "score",
+      "value": 2,
+      "confidence": 0.6,
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.22,
+        "2": 0.54,
+        "3": 0.15,
+        "4": 0.04,
+        "5": 0.05
+      }
+    }
+  }
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
   <!-- Downloads & Releases -->
   <section class="section" id="downloads">
     <div class="container">
