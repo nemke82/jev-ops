@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Install jev-ops
         run: |
-          sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-unknown-linux-gnu -o /usr/local/bin/jev-ops
+          sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-linux-x86_64 -o /usr/local/bin/jev-ops
           sudo chmod +x /usr/local/bin/jev-ops
 
       # Inputs and outputs go through env vars, never ${{ }} inside the script,

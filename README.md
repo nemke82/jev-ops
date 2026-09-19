@@ -77,27 +77,30 @@ Install pure standalone binaries directly with `curl`:
 
 ```bash
 # Linux (x86_64 glibc)
-sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-unknown-linux-gnu -o /usr/local/bin/jev-ops
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-linux-x86_64 -o /usr/local/bin/jev-ops
 sudo chmod +x /usr/local/bin/jev-ops
 
-# Linux (static musl / Alpine)
-sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-unknown-linux-musl -o /usr/local/bin/jev-ops
+# Linux (static musl / Alpine / containers)
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-linux-x86_64-musl -o /usr/local/bin/jev-ops
 sudo chmod +x /usr/local/bin/jev-ops
 
-# Linux (ARM64 / aarch64)
-sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-aarch64-unknown-linux-gnu -o /usr/local/bin/jev-ops
+# Linux (ARM64 / AWS Graviton)
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-linux-arm64 -o /usr/local/bin/jev-ops
 sudo chmod +x /usr/local/bin/jev-ops
 
 # macOS (Apple Silicon M1/M2/M3/M4)
-sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-aarch64-apple-darwin -o /usr/local/bin/jev-ops
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-macos-arm64 -o /usr/local/bin/jev-ops
 sudo chmod +x /usr/local/bin/jev-ops
 
 # macOS (Intel)
-sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-apple-darwin -o /usr/local/bin/jev-ops
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-macos-x86_64 -o /usr/local/bin/jev-ops
 sudo chmod +x /usr/local/bin/jev-ops
+
+# Windows (PowerShell)
+curl.exe -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-windows-x86_64.exe -o jev-ops.exe
 ```
 
-Full release bundles including offline packs are also available on [GitHub Releases](https://github.com/nemke82/jev-ops/releases/tag/v2026.09.19).
+Standalone binaries and SHA256 checksums for all platforms are available on [GitHub Releases](https://github.com/nemke82/jev-ops/releases/tag/v2026.09.19).
 
 ### From Source
 
