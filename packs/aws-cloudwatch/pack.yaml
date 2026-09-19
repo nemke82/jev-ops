@@ -1,0 +1,67 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "aws-cloudwatch"
+  version: "0.1.0"
+  description: "AWS CloudWatch Logs, ECS Fargate, ALB, Lambda, and RDS incident triage"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 1048576
+
+  decisions:
+    health:
+      type: "choice"
+      values:
+        - healthy
+        - degraded
+        - unhealthy
+        - unknown
+
+    service:
+      type: "choice"
+      values:
+        - ecs
+        - lambda
+        - alb
+        - rds
+        - api_gateway
+        - dynamodb
+        - s3
+        - unknown
+
+    root_cause:
+      type: "choice"
+      values:
+        - normal
+        - oom_killed
+        - timeout
+        - connection_pool_exhausted
+        - target_unhealthy
+        - upstream_5xx
+        - iam_denied
+        - throttling
+        - unknown
+
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+
+    recommended_action:
+      type: "choice"
+      values:
+        - no_action
+        - ssm_restart
+        - scale_out
+        - flush_connection_pool
+        - rollback_deployment
+        - escalate_oncall
+
+  instructions: |
+    Analyze AWS CloudWatch log streams, ECS task exit reasons, ALB access log spikes,
+    Lambda error traces, or RDS event notifications. Determine operational health, identify
+    the impacted AWS managed service, classify the root cause, and prescribe automated remediation.

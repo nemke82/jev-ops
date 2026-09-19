@@ -1,0 +1,35 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "example"
+  version: "0.1.0"
+  description: "Generic example diagnostic pack demonstrating custom domain decisions"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 524288
+
+  decisions:
+    status:
+      type: "choice"
+      values:
+        - operational
+        - degraded
+        - failing
+        - unknown
+
+    impact:
+      type: "score"
+      min: 0
+      max: 5
+
+    alert_oncall:
+      type: "boolean"
+
+  instructions: |
+    Analyze generic service diagnostic state.
+    Evaluate the operational status, business impact level from 0 to 5,
+    and whether the on-call engineer should be paged immediately.

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# checkmk-notification.sh — Intelligent CheckMK Alert Noise Reduction with jev-ops
+# Place in: /omd/sites/<SITE>/local/share/check_mk/notifications/
+# ==============================================================================
+set -euo pipefail
+
+ALERT_CONTEXT="CheckMK Alert on Host: ${NOTIFY_HOSTNAME:-localhost}
+Service: ${NOTIFY_SERVICEDESC:-Filesystem /}
+State: ${NOTIFY_SERVICESTATE:-CRITICAL}
+Output: ${NOTIFY_SERVICEOUTPUT:-Filesystem / 97.8%, growth last hour 0.1%, WARN 90%, CRIT 98%}
+PerfData: ${NOTIFY_SERVICEPERFDATA:-/=97.8%;90;98;0;100}"
+
+# Run diagnostic inference through jev-ops
+DECISION_JSON=$(echo "$ALERT_CONTEXT" | jev-ops analyze checkmk --json)
+
+ACTION=$(echo "$DECISION_JSON" | jq -r '.decisions.action.value')
+CONFIDENCE=$(echo "$DECISION_JSON" | jq -r '.decisions.action.confidence')
+DOMAIN=$(echo "$DECISION_JSON" | jq -r '.decisions.root_domain.value')
+
+echo "[jev-ops] Evaluated alert for ${NOTIFY_HOSTNAME:-unknown}: ACTION=${ACTION} (conf=${CONFIDENCE}), DOMAIN=${DOMAIN}" >&2
+
+# Confidence-gated safety policy
+if [[ "$ACTION" == "IGNORE" && $(echo "$CONFIDENCE > 0.85" | bc -l) -eq 1 ]]; then
+    echo "[jev-ops] Transient noise filtered. Suppressing notification." >&2
+    exit 0
+elif [[ "$ACTION" == "AUTO_REPAIR" && $(echo "$CONFIDENCE > 0.95" | bc -l) -eq 1 ]]; then
+    echo "[jev-ops] High confidence auto-repair permitted. Triggering safe cleanup script..." >&2
+    /opt/ops/bin/safe-disk-cleanup.sh || true
+    exit 0
+else
+    echo "[jev-ops] Routing alert to PagerDuty/Slack (Action: ${ACTION}, Conf: ${CONFIDENCE})" >&2
+    # Trigger default CheckMK email or webhook
+    exit 0
+fi

@@ -1,0 +1,47 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "nginx"
+  version: "0.1.0"
+  description: "Nginx web server error logs, upstream gateways, and SSL issues"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 1048576
+
+  decisions:
+    health:
+      type: "choice"
+      values:
+        - healthy
+        - degraded
+        - unhealthy
+        - unknown
+
+    issue_type:
+      type: "choice"
+      values:
+        - normal
+        - upstream_502_504
+        - upstream_timeout
+        - ssl_certificate
+        - rate_limited
+        - worker_connections
+        - configuration_syntax
+        - unknown
+
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+
+    needs_attention:
+      type: "boolean"
+
+  instructions: |
+    Analyze Nginx access/error logs or nginx -t output.
+    Classify gateway proxy errors (502 Bad Gateway, 504 Timeout), upstream connection refused,
+    worker process exhaustion, or SSL certificate expiration.

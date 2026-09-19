@@ -1,0 +1,7 @@
+[  120.456123] Out of memory: Killed process 4129 (mysqld) total-vm:4194304kB, anon-rss:3145728kB, file-rss:0kB, shmem-rss:0kB, UID:27 pgtables:8192kB oom_score_adj:0
+[  120.456201] oom_reaper: reaped process 4129 (mysqld), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
+[  120.456312] memory: usage 33554432kB, limit 33554432kB, failcnt 9123
+[  120.456350] memory+swap: usage 33554432kB, limit 33554432kB, failcnt 421
+[  120.456400] kmem: usage 419430kB, limit 9007199254740988kB, failcnt 0
+[  120.456480] invoked oom-killer: gfp_mask=0x1100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[  120.456510] CPU: 3 PID: 8128 Comm: php-fpm Not tainted 6.8.0-45-generic #45-Ubuntu

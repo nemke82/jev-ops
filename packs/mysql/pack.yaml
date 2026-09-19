@@ -1,0 +1,47 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "mysql"
+  version: "0.1.0"
+  description: "MySQL / MariaDB performance bottlenecks, connection saturation, and deadlocks"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 1048576
+
+  decisions:
+    health:
+      type: "choice"
+      values:
+        - healthy
+        - degraded
+        - unhealthy
+        - unknown
+
+    bottleneck:
+      type: "choice"
+      values:
+        - normal
+        - max_connections
+        - deadlock
+        - slow_queries
+        - replication_lag
+        - innodb_buffer_full
+        - disk_full
+        - unknown
+
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+
+    needs_attention:
+      type: "boolean"
+
+  instructions: |
+    Analyze MySQL status telemetry (e.g. SHOW GLOBAL STATUS, SHOW PROCESSLIST, error logs).
+    Determine if the database is experiencing connection saturation, replication lag spikes,
+    or deadlocks threatening service availability.

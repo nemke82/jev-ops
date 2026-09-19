@@ -1,0 +1,47 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "kubernetes"
+  version: "0.1.0"
+  description: "Kubernetes pod, event, and cluster diagnostics"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 2097152
+
+  decisions:
+    health:
+      type: "choice"
+      values:
+        - healthy
+        - degraded
+        - unhealthy
+        - unknown
+
+    root_cause:
+      type: "choice"
+      values:
+        - scheduling
+        - image_pull
+        - crashloop
+        - resources
+        - networking
+        - storage
+        - application
+        - unknown
+
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+
+    needs_attention:
+      type: "boolean"
+
+  instructions: |
+    Analyze Kubernetes diagnostic output including pod statuses, events, describe outputs, and logs.
+    Classify whether the workload is healthy, degraded, or unhealthy.
+    Identify the most probable root cause from the domain options.

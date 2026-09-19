@@ -1,0 +1,47 @@
+name: Canary Health Gate
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      canary_metrics_file:
+        required: true
+        type: string
+
+jobs:
+  canary-evaluation:
+    name: Evaluate Canary Health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install jev-ops
+        run: |
+          curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-v2026.09.19-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+          sudo mv jev-ops-v2026.09.19-x86_64-unknown-linux-gnu/jev-ops /usr/local/bin/
+
+      - name: Analyze Canary Metrics
+        id: analyze
+        run: |
+          DECISION_JSON=$(cat "${{ inputs.canary_metrics_file }}" | jev-ops analyze ci-canary --json)
+          echo "decision_json<<EOF" >> $GITHUB_OUTPUT
+          echo "$DECISION_JSON" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          ACTION=$(echo "$DECISION_JSON" | jq -r '.decisions.rollout_action.value')
+          ROLLBACK=$(echo "$DECISION_JSON" | jq -r '.decisions.rollback_now.value')
+          CONF=$(echo "$DECISION_JSON" | jq -r '.decisions.rollout_action.confidence')
+          
+          echo "action=${ACTION}" >> $GITHUB_OUTPUT
+          echo "rollback=${ROLLBACK}" >> $GITHUB_OUTPUT
+          echo "confidence=${CONF}" >> $GITHUB_OUTPUT
+
+      - name: Gate Check
+        run: |
+          if [ "${{ steps.analyze.outputs.rollback }}" = "true" ]; then
+            echo "❌ Canary gate failed! High-risk error spike detected (Action: ${{ steps.analyze.outputs.action }}, Confidence: ${{ steps.analyze.outputs.confidence }})."
+            echo "Initiating automated rollback..."
+            exit 1
+          else
+            echo "✅ Canary deployment healthy. Proceeding with full fleet rollout."
+          fi

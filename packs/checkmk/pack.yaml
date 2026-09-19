@@ -1,0 +1,48 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "checkmk"
+  version: "0.1.0"
+  description: "CheckMK monitoring alert noise reduction and intelligent action router"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 524288
+
+  decisions:
+    action:
+      type: "choice"
+      values:
+        - ignore
+        - watch
+        - notify
+        - auto_repair
+        - escalate
+
+    root_domain:
+      type: "choice"
+      values:
+        - normal
+        - disk
+        - memory
+        - cpu
+        - network
+        - service_down
+        - flapping
+        - unknown
+
+    urgency:
+      type: "score"
+      min: 0
+      max: 5
+
+    page_oncall:
+      type: "boolean"
+
+  instructions: |
+    Evaluate CheckMK service check output, thresholds (WARN/CRIT), and growth metrics.
+    Determine whether this alert is transient noise to ignore, a slow trend to watch,
+    requires normal notification, qualifies for safe automated repair, or requires immediate human escalation.

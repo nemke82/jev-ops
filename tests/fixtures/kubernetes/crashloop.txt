@@ -1,0 +1,11 @@
+NAME                              READY   STATUS             RESTARTS      AGE
+checkout-service-7df98f98f-4kmw9   0/1     CrashLoopBackOff   8 (90s ago)   14m
+
+Events:
+  Type     Reason     Age                  From               Message
+  ----     ------     ----                 ----               -------
+  Normal   Scheduled  14m                  default-scheduler  Successfully assigned default/checkout-service-7df98f98f-4kmw9 to node-pool-1-worker-3
+  Normal   Pulled     14m                  kubelet            Container image "registry.internal/checkout:v2.1" already present on machine
+  Normal   Created    14m                  kubelet            Created container checkout
+  Normal   Started    14m                  kubelet            Started container checkout
+  Warning  BackOff    82s (x35 over 13m)   kubelet            Back-off restarting failed container checkout in pod checkout-service-7df98f98f-4kmw9_default

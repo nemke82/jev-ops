@@ -1,0 +1,5 @@
+[  512.102345] EXT4-fs error (device nvme0n1p2): ext4_lookup:1845: inode #2104928: comm nginx: deleted inode referenced: 2104929
+[  512.102390] Aborting journal on device nvme0n1p2-8.
+[  512.102420] EXT4-fs (nvme0n1p2): Remounting filesystem read-only
+[  512.102500] EXT4-fs error (device nvme0n1p2) in ext4_reserve_inode_write:6120: Journal has aborted
+[  512.102550] Buffer I/O error on dev nvme0n1p2, logical block 0, lost sync page write

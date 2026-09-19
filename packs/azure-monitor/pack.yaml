@@ -1,0 +1,65 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "azure-monitor"
+  version: "0.1.0"
+  description: "Azure Monitor alerts, AKS node pressure, App Gateway probes, and CosmosDB triage"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 1048576
+
+  decisions:
+    health:
+      type: "choice"
+      values:
+        - healthy
+        - degraded
+        - unhealthy
+        - unknown
+
+    resource_type:
+      type: "choice"
+      values:
+        - aks
+        - app_gateway
+        - cosmosdb
+        - azure_functions
+        - virtual_machine
+        - storage_account
+        - unknown
+
+    root_cause:
+      type: "choice"
+      values:
+        - normal
+        - crashloop
+        - probe_failure
+        - rate_limited_429
+        - memory_pressure
+        - certificate_expired
+        - connection_refused
+        - unknown
+
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+
+    recommended_action:
+      type: "choice"
+      values:
+        - no_action
+        - auto_heal
+        - scale_node_pool
+        - throttle_backoff
+        - renew_cert
+        - escalate_oncall
+
+  instructions: |
+    Analyze Azure Monitor Common Alert Schema, App Gateway health probe logs, AKS diagnostic events,
+    or CosmosDB diagnostic metrics. Determine health state, pinpoint resource type, and specify
+    precise automated resolution steps.

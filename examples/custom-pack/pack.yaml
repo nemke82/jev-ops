@@ -1,0 +1,37 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "queue-service"
+  version: "0.1.0"
+  description: "Example custom queue service diagnostic pack"
+  author: "Example User"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 524288
+
+  decisions:
+    state:
+      type: "choice"
+      values:
+        - healthy
+        - delayed
+        - stuck
+        - crashed
+        - unknown
+
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+
+    intervention_required:
+      type: "boolean"
+
+  instructions: |
+    Analyze diagnostic output from the queue service.
+
+    Determine its current operational state and whether
+    administrator intervention is required.

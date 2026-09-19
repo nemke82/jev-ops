@@ -1,0 +1,65 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "gcp-cloud-ops"
+  version: "0.1.0"
+  description: "Google Cloud Logging, Cloud Run container faults, GKE evictions, and BigQuery triage"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 1048576
+
+  decisions:
+    health:
+      type: "choice"
+      values:
+        - healthy
+        - degraded
+        - unhealthy
+        - unknown
+
+    service:
+      type: "choice"
+      values:
+        - cloud_run
+        - gke
+        - cloud_sql
+        - bigquery
+        - pubsub
+        - compute_engine
+        - unknown
+
+    root_cause:
+      type: "choice"
+      values:
+        - normal
+        - container_exited_137
+        - preemptible_eviction
+        - connection_timeout
+        - quota_exhausted
+        - dead_letter_surge
+        - out_of_memory
+        - unknown
+
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+
+    recommended_action:
+      type: "choice"
+      values:
+        - no_action
+        - restart_revision
+        - reschedule_pod
+        - increase_quota
+        - dead_letter_purge
+        - escalate_oncall
+
+  instructions: |
+    Analyze Google Cloud Logging (formerly Stackdriver) JSON payloads, Cloud Run container error traces,
+    GKE preemptible node terminations, or BigQuery query quota metrics. Return structured decisions
+    for rapid automated SRE routing.
