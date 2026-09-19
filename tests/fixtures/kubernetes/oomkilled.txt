@@ -1,0 +1,13 @@
+NAME                           READY   STATUS      RESTARTS      AGE
+worker-queue-5c487cb78b-m8znp   0/1     OOMKilled   3 (2m ago)    22m
+
+Last State:     Terminated
+  Reason:       OOMKilled
+  Exit Code:    137
+  Started:      Sat, 19 Sep 2026 11:45:10 +0000
+  Finished:     Sat, 19 Sep 2026 12:00:15 +0000
+Container:      worker
+Limits:
+  memory:       512Mi
+Requests:
+  memory:       256Mi

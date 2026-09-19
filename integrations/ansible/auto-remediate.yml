@@ -1,0 +1,66 @@
+---
+# ==============================================================================
+# auto-remediate.yml — Confidence-gated safe SRE remediation with jev-ops
+# Requires TYPESAFE_API_KEY in the environment of the managed hosts.
+# ==============================================================================
+- name: SRE Autonomous Diagnostics and Gated Remediation
+  hosts: webservers
+  gather_facts: false
+
+  tasks:
+    - name: Collect last 50 error journal entries
+      ansible.builtin.command: "journalctl -p err --since '-10m' -n 50 --no-pager"
+      register: journal_output
+      changed_when: false
+
+    # A quiet journal is the healthy case: skip analysis instead of failing on empty input.
+    - name: Evaluate diagnostic health via jev-ops
+      ansible.builtin.command: "jev-ops analyze linux --json"
+      args:
+        stdin: "{{ journal_output.stdout }}"
+      register: jev_result
+      changed_when: false
+      when: journal_output.stdout | trim | length > 0
+
+    - name: Parse typed decisions
+      ansible.builtin.set_fact:
+        jev_decisions: "{{ jev_result.stdout | from_json }}"
+      when: jev_result is not skipped
+
+    - name: Display diagnostic decision
+      ansible.builtin.debug:
+        msg: >
+          Category: {{ jev_decisions.decisions.category.value }}
+          (confidence {{ (jev_decisions.decisions.category.confidence * 100) | round }}%),
+          Severity: {{ jev_decisions.decisions.severity.value }}/5
+      when: jev_decisions is defined
+
+    # POLICY GATE: Only auto-restart the service for application faults, with >= 95%
+    # confidence, when attention is required. Restarting nginx does not fix disk errors.
+    - name: Auto-remediate web service
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+      when:
+        - jev_decisions is defined
+        - jev_decisions.decisions.needs_attention.value
+        - jev_decisions.decisions.category.value == 'application'
+        - (jev_decisions.decisions.category.confidence | float) >= 0.95
+
+    # ESCALATION: Notify on-call if severity is high or the model reports low confidence
+    - name: Escalate to On-Call Slack channel
+      ansible.builtin.uri:
+        url: "{{ lookup('env', 'SLACK_WEBHOOK_URL') }}"
+        method: POST
+        body_format: json
+        body:
+          text: >
+            🚨 jev-ops needs a human on {{ inventory_hostname }}.
+            Category: {{ jev_decisions.decisions.category.value }}
+            ({{ (jev_decisions.decisions.category.confidence * 100) | round }}% confidence),
+            Severity: {{ jev_decisions.decisions.severity.value }}/5.
+      when:
+        - jev_decisions is defined
+        - jev_decisions.decisions.needs_attention.value
+        - (jev_decisions.decisions.severity.value | int) >= 4
+          or (jev_decisions.decisions.category.confidence | float) < 0.60

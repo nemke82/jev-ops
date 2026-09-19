@@ -1,0 +1,53 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "docker"
+  version: "0.1.0"
+  description: "Docker container health, crash loops, and resource limits"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 1048576
+
+  decisions:
+    health:
+      type: "choice"
+      values:
+        - healthy
+        - degraded
+        - unhealthy
+        - unknown
+
+    failure_mode:
+      type: "choice"
+      values:
+        - normal
+        - oom_killed
+        - crash_loop
+        - unhealthy_probe
+        - exit_nonzero
+        - port_conflict
+        - daemon_unreachable
+        - unknown
+
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+      levels:
+        - "Normal: no errors or anomalies in the signals"
+        - "Informational: notable events with no impact on service"
+        - "Minor: isolated errors or warnings with no user-visible impact"
+        - "Degraded: partial impairment, elevated errors or latency for some users or requests"
+        - "Serious: a major component is failing or most requests are affected; urgent action needed"
+        - "Critical: outage, data loss or corruption risk, or active security compromise"
+
+    needs_attention:
+      type: "boolean"
+
+  instructions: |
+    Analyze Docker diagnostic output (e.g. docker ps, docker inspect, docker logs, container exit codes).
+    Identify if containers are stuck in restart loops, killed by host OOM, or failing health probes.

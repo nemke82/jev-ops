@@ -1,0 +1,37 @@
+[package]
+name = "jev-ops"
+version = "2026.9.19"
+edition = "2021"
+authors = ["jev-ops contributors"]
+description = "Extensible AI-powered diagnostics for DevOps & SRE — analyze logs and infrastructure signals using pluggable packs and Jev"
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/nemke82/jev-ops"
+keywords = ["devops", "sre", "diagnostics", "ai", "jev"]
+categories = ["command-line-utilities", "development-tools::debugging"]
+
+[dependencies]
+clap = { version = "4.5", features = ["derive", "env"] }
+clap_complete = "4.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+thiserror = "2.0"
+semver = { version = "1.0", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dirs = "6.0"
+ureq = { version = "2.12", features = ["json", "tls"] }
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+tempfile = "3.16"
+
+[lib]
+name = "jev_ops"
+path = "src/lib.rs"
+
+[[bin]]
+name = "jev-ops"
+path = "src/main.rs"

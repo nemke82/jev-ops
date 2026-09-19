@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jev-ops — Extensible AI-Powered Diagnostics for DevOps & SRE</title>
+  <meta name="description" content="Extensible AI-powered diagnostics for DevOps & SRE — analyze logs, telemetry, and alerts with pluggable packs and typed probabilistic decisions powered by TypeSafe Jev.">
+  <meta property="og:title" content="jev-ops — Extensible AI Diagnostics for DevOps & SRE">
+  <meta property="og:description" content="Turn logs and system signals into typed probabilistic decisions with pluggable packs and TypeSafe Jev.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <a href="#" class="nav-brand">
+      <img src="logo.svg" alt="jev-ops logo" class="nav-logo-img">
+      <span class="brand-tag">v2026.09.19</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#simulator">Live Simulator</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#integrations">Integrations</a></li>
+      <li><a href="#packs">Packs</a></li>
+      <li><a href="#policy">Safety Policy</a></li>
+      <li><a href="#cli">CLI Reference</a></li>
+      <li><a href="#downloads">Releases</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="theme-toggle-btn" id="themeToggle" title="Switch Theme" aria-label="Toggle Theme">
+        <span id="themeIcon">☀️</span>
+      </button>
+      <a href="https://github.com/nemke82/jev-ops" target="_blank" rel="noopener" class="btn-github">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-pill">
+        <span>⚡ System One Model for Multi-Cloud &amp; SRE</span>
+      </div>
+      <h1>
+        Unstructured Operational State In,<br>
+        <span class="gradient-text">Typed Probabilistic Decisions Out.</span>
+      </h1>
+      <p class="hero-subtitle">
+        <code>jev-ops</code> pipes AWS CloudWatch streams, Azure Monitor alerts, GCP Cloud Logging, Kubernetes events, and kernel telemetry into pluggable diagnostic packs powered by <strong>TypeSafe Jev</strong>. Stop parsing fuzzy prose—get structured values and calibrated probabilities your automation can branch on with complete confidence.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="#simulator" class="btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span>Try Live Simulator</span>
+        </a>
+        <a href="#integrations" class="btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"></path><path d="M18 8h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4"></path><circle cx="8" cy="12" r="2"></circle></svg>
+          <span>DevOps Integrations</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Simulator -->
+  <section class="simulator-section" id="simulator">
+    <div class="container">
+      <div class="simulator-window">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="terminal-title">jev-ops diagnostic sandbox</div>
+          <div class="terminal-actions">
+            <button class="btn-tab active" data-view="cards">Visual Cards</button>
+            <button class="btn-tab" data-view="human">Human Text</button>
+            <button class="btn-tab" data-view="json">JSON API</button>
+          </div>
+        </div>
+
+        <div class="simulator-body">
+          <!-- Left: Input Pane -->
+          <div class="sim-input-pane">
+            <div class="pane-label">
+              <span>Diagnostic Input (STDIN)</span>
+              <span>Pack: Linux / K8s</span>
+            </div>
+            <div class="scenario-picker">
+              <button class="scenario-btn active" data-scenario="ext4">EXT4 Crash</button>
+              <button class="scenario-btn" data-scenario="aws">AWS ECS Crash</button>
+              <button class="scenario-btn" data-scenario="azure">Azure AppGW 502</button>
+              <button class="scenario-btn" data-scenario="gcp">GCP Cloud Run OOM</button>
+              <button class="scenario-btn" data-scenario="oom">OOM Killer</button>
+              <button class="scenario-btn" data-scenario="k8s">K8s CrashLoop</button>
+              <button class="scenario-btn" data-scenario="ssh">SSH Brute Force</button>
+              <button class="scenario-btn" data-scenario="healthy">Operational</button>
+            </div>
+            <textarea class="sim-textarea" id="simInput" spellcheck="false">[  512.102345] EXT4-fs error (device nvme0n1p2): ext4_lookup:1845: inode #2104928: comm nginx: deleted inode referenced: 2104929
+[  512.102390] Aborting journal on device nvme0n1p2-8.
+[  512.102420] EXT4-fs (nvme0n1p2): Remounting filesystem read-only
+[  512.102500] EXT4-fs error (device nvme0n1p2) in ext4_reserve_inode_write:6120: Journal has aborted
+[  512.102550] Buffer I/O error on dev nvme0n1p2, logical block 0, lost sync page write</textarea>
+            <div class="sim-run-bar">
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
+                Illustrative sample output, not a live <code>jev-latest</code> call
+              </span>
+              <button class="sim-run-btn" id="simRunBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Re-Analyze</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Output Pane -->
+          <div class="sim-output-pane">
+            <div class="pane-label">
+              <span>Typed Decisions (System One)</span>
+              <span>Confidence Derived</span>
+            </div>
+            <div class="output-view" id="outputView">
+              <!-- Rendered dynamically by app.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture & System One -->
+  <section class="section" id="architecture">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Architecture</span>
+        <h2 class="section-title">Why System One for SRE?</h2>
+        <p class="section-desc">
+          Traditional LLMs produce conversational prose that automation cannot safely rely on. TypeSafe Jev evaluates atomic questions directly against state, returning typed probabilities.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon icon-magenta">🎯</div>
+          <h3 class="feature-title">Atomic Questions</h3>
+          <p class="feature-desc">
+            Deconstruct incidents into separate gut-check determinations: classification (<strong>Choice</strong>), severity level (<strong>Score</strong>), and intervention urgency (<strong>Noul</strong>).
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon icon-cyan">⚡</div>
+          <h3 class="feature-title">Parallel Evaluation</h3>
+          <p class="feature-desc">
+            All questions in a pack are evaluated concurrently against the same state in a single round-trip. Adding questions incurs zero context rot and minimal added latency.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon icon-emerald">🛡️</div>
+          <h3 class="feature-title">Pack = Data, Not Code</h3>
+          <p class="feature-desc">
+            Packs are declarative YAML definitions. They never execute arbitrary shell scripts or spawn subprocesses, maintaining strict security boundaries across multi-tenant clusters.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DevOps & Cloud Integrations -->
+  <section class="section" id="integrations">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Cloud &amp; DevOps Ecosystem</span>
+        <h2 class="section-title">Connect With Modern Cloud &amp; Automation Tools</h2>
+        <p class="section-desc">
+          Drop <code>jev-ops</code> into AWS Lambda, Azure Monitor, GCP Cloud Run, Terraform pipelines, CheckMK, and Ansible as an autonomous decision layer.
+        </p>
+      </div>
+
+      <div class="integ-tabs">
+        <button class="integ-tab-btn active" data-integ="aws">AWS Lambda &amp; ECS</button>
+        <button class="integ-tab-btn" data-integ="azure">Azure Monitor Webhook</button>
+        <button class="integ-tab-btn" data-integ="gcp">GCP Cloud Run Auto-Heal</button>
+        <button class="integ-tab-btn" data-integ="terraform">Terraform Safety Gate</button>
+        <button class="integ-tab-btn" data-integ="checkmk">CheckMK Alert De-noising</button>
+        <button class="integ-tab-btn" data-integ="ansible">Ansible Gated Playbook</button>
+        <button class="integ-tab-btn" data-integ="k8s">K8s Event Stream</button>
+        <button class="integ-tab-btn" data-integ="gha">CI/CD Canary Gate</button>
+        <button class="integ-tab-btn" data-integ="openclaw">OpenClaw Agent Router</button>
+      </div>
+
+      <div class="code-block-container">
+        <button class="copy-btn" data-target="integCodeBlock">Copy Integration Code</button>
+        <pre><code id="integCodeBlock"># AWS Lambda / CloudWatch Logs Automated Remediation
+import base64, gzip, json, subprocess, boto3
+
+def lambda_handler(event, context):
+    payload = gzip.decompress(base64.b64decode(event["awslogs"]["data"]))
+    logs = "\n".join([e["message"] for e in json.loads(payload)["logEvents"][:20]])
+    
+    # Analyze via jev-ops aws-cloudwatch pack
+    proc = subprocess.run(
+        ["jev-ops", "analyze", "aws-cloudwatch", "--json"],
+        input=logs.encode(), stdout=subprocess.PIPE
+    )
+    result = json.loads(proc.stdout)
+    action = result["decisions"]["recommended_action"]["value"]
+    conf = result["decisions"]["recommended_action"]["confidence"]
+
+    # Automated remediation if confidence >= 90%
+    if action == "ssm_restart" and conf >= 0.90:
+        ecs = boto3.client("ecs")
+        ecs.update_service(cluster="prod", service="payment-worker", forceNewDeployment=True)
+        return {"remediated": True, "action": "ecs_cycled"}
+    return {"remediated": False, "escalated": True}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Diagnostic Packs -->
+  <section class="section" id="packs">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Extensibility</span>
+        <h2 class="section-title">Packs Own the Domain Vocabulary</h2>
+        <p class="section-desc">
+          Zero technology-specific logic exists in the Rust binary. Packs define their own failure modes, severity rubrics, and instructions.
+        </p>
+      </div>
+
+      <div class="pack-tabs">
+        <button class="pack-tab-btn" data-pack="aws">aws-cloudwatch</button>
+        <button class="pack-tab-btn" data-pack="azure">azure-monitor</button>
+        <button class="pack-tab-btn" data-pack="gcp">gcp-cloud-ops</button>
+        <button class="pack-tab-btn active" data-pack="linux">linux</button>
+        <button class="pack-tab-btn" data-pack="kubernetes">kubernetes</button>
+        <button class="pack-tab-btn" data-pack="docker">docker</button>
+        <button class="pack-tab-btn" data-pack="nginx">nginx</button>
+        <button class="pack-tab-btn" data-pack="mysql">mysql</button>
+        <button class="pack-tab-btn" data-pack="checkmk">checkmk</button>
+        <button class="pack-tab-btn" data-pack="ci-canary">ci-canary</button>
+        <button class="pack-tab-btn" data-pack="custom">custom-queue</button>
+      </div>
+
+      <div class="code-block-container">
+        <button class="copy-btn" data-target="packCodeBlock">Copy YAML</button>
+        <pre><code id="packCodeBlock">api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "linux"
+  version: "0.1.0"
+  description: "General Linux diagnostic classification"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 1048576
+
+  decisions:
+    health:
+      type: "choice"
+      values: [healthy, degraded, unhealthy, unknown]
+    category:
+      type: "choice"
+      values: [normal, cpu, memory, filesystem, network, application, security, hardware, unknown]
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+    needs_attention:
+      type: "boolean"</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Confidence Gating Safety Policy -->
+  <section class="section" id="policy" style="background: rgba(15, 23, 42, 0.3);">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Safety Engineering</span>
+        <h2 class="section-title">Confidence-Gated Automation Policy</h2>
+        <p class="section-desc">
+          In SRE, a model's decision tells you <em>what</em>, but calibrated confidence tells you <em>whether you are permitted to act</em>.
+        </p>
+      </div>
+
+      <div class="matrix-card">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Confidence Tier</th>
+              <th>Permitted Action</th>
+              <th>Automation Policy</th>
+              <th>Typical Scenarios</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong style="color: #34d399;">High (&ge; 95%)</strong></td>
+              <td><span class="policy-badge badge-auto">ACT AUTOMATICALLY</span></td>
+              <td>Safe autonomous remediation without human latency</td>
+              <td>Pod restart on CrashLoop, cache eviction, transient alert suppression</td>
+            </tr>
+            <tr>
+              <td><strong style="color: #fbbf24;">Medium (70% - 94%)</strong></td>
+              <td><span class="policy-badge badge-verify">CONFIRM &amp; VERIFY</span></td>
+              <td>Notify engineer with pre-filled recommendation and runbook</td>
+              <td>Replication lag investigation, node draining proposal, memory limit upgrade</td>
+            </tr>
+            <tr>
+              <td><strong style="color: #f87171;">Low (&lt; 70%)</strong></td>
+              <td><span class="policy-badge badge-escalate">DO NOT ACT</span></td>
+              <td>Halt automation. Escalate immediately to human on-call</td>
+              <td>Ambiguous multi-service cascade, zero-day kernel panic, unknown failure mode</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLI Reference -->
+  <section class="section" id="cli">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">CLI Workflow</span>
+        <h2 class="section-title">Built for Modern Linux, Cloud &amp; Automation Pipelines</h2>
+        <p class="section-desc">
+          Pipes directly with <code>aws logs</code>, <code>az monitor</code>, <code>gcloud logging</code>, <code>kubectl</code>, <code>journalctl</code>, and <code>jq</code> with predictable process exit codes.
+        </p>
+      </div>
+
+      <div class="matrix-card">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Description</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>analyze &lt;pack&gt;</code></td>
+              <td>Analyze input via stdin or file against a loaded pack</td>
+              <td><code>journalctl -p err | jev-ops analyze linux</code></td>
+            </tr>
+            <tr>
+              <td><code>CloudWatch ECS</code></td>
+              <td>Triage AWS ECS Fargate container crash or OOM</td>
+              <td><code>aws logs tail /aws/ecs/pay | jev-ops analyze aws-cloudwatch</code></td>
+            </tr>
+            <tr>
+              <td><code>GCP Cloud Run</code></td>
+              <td>Diagnose Cloud Run memory ceiling and termination</td>
+              <td><code>gcloud logging read "resource.type=cloud_run" | jev-ops analyze gcp-cloud-ops</code></td>
+            </tr>
+            <tr>
+              <td><code>analyze --json</code></td>
+              <td>Emit clean machine-consumable JSON without debug pollution</td>
+              <td><code>jev-ops analyze linux --json | jq .decisions</code></td>
+            </tr>
+            <tr>
+              <td><code>packs list</code></td>
+              <td>Discover packs in <code>./packs</code>, config, and data dirs</td>
+              <td><code>jev-ops packs list</code></td>
+            </tr>
+            <tr>
+              <td><code>packs show &lt;pack&gt;</code></td>
+              <td>Inspect decision schema, rules, and input limits</td>
+              <td><code>jev-ops packs show aws-cloudwatch</code></td>
+            </tr>
+            <tr>
+              <td><code>packs new &lt;name&gt;</code></td>
+              <td>Scaffold a new custom diagnostic pack template</td>
+              <td><code>jev-ops packs new my-service --dir ./packs</code></td>
+            </tr>
+            <tr>
+              <td><code>packs validate &lt;path&gt;</code></td>
+              <td>Validate YAML schema, types, and limits</td>
+              <td><code>jev-ops packs validate ./packs/aws-cloudwatch/pack.yaml</code></td>
+            </tr>
+            <tr>
+              <td><code>completion &lt;shell&gt;</code></td>
+              <td>Generate auto-completions for bash, zsh, fish, powershell</td>
+              <td><code>source &lt;(jev-ops completion bash)</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Downloads & Releases -->
+  <section class="section" id="downloads">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Multi-Platform Releases</span>
+        <h2 class="section-title">Install CalVer v2026.09.19</h2>
+        <p class="section-desc">
+          Automated GitHub Action release builds with verified SHA256 checksums.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3 class="feature-title">🐧 Linux (x86_64 / aarch64)</h3>
+          <p class="feature-desc" style="margin-bottom: 1rem;">
+            Precompiled glibc and static musl binaries for Debian, Ubuntu, RHEL, Fedora, Alpine.
+          </p>
+          <pre class="release-command"><code>curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-v2026.09.19-x86_64-unknown-linux-gnu.tar.gz | tar -xz</code></pre>
+        </div>
+
+        <div class="feature-card">
+          <h3 class="feature-title">🍏 macOS (Apple Silicon / Intel)</h3>
+          <p class="feature-desc" style="margin-bottom: 1rem;">
+            Native Darwin binaries optimized for M1/M2/M3/M4 Apple Silicon and Intel x86_64 Macs.
+          </p>
+          <pre class="release-command"><code>curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-v2026.09.19-aarch64-apple-darwin.tar.gz | tar -xz</code></pre>
+        </div>
+
+        <div class="feature-card">
+          <h3 class="feature-title">🦀 Build from Source</h3>
+          <p class="feature-desc" style="margin-bottom: 1rem;">
+            Zero external C dependencies. Installs cleanly with standard Cargo toolchain.
+          </p>
+          <pre class="release-command"><code>cargo install --git https://github.com/nemke82/jev-ops.git</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <a href="#" class="nav-brand">
+          <img src="logo.svg" alt="jev-ops logo" class="nav-logo-img">
+        </a>
+        <ul class="footer-links">
+          <li><a href="https://github.com/nemke82/jev-ops" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://docs.typesafe.ai/introduction" target="_blank" rel="noopener">TypeSafe AI Docs</a></li>
+          <li><a href="https://github.com/nemke82/jev-ops/releases" target="_blank" rel="noopener">Releases</a></li>
+          <li><a href="https://github.com/nemke82/jev-ops/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+      <div class="footer-bottom">
+        <p>Extensible AI-powered diagnostics for DevOps & SRE. Powered by TypeSafe System One.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

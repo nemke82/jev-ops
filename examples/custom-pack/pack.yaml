@@ -1,0 +1,44 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "queue-service"
+  version: "0.1.0"
+  description: "Example custom queue service diagnostic pack"
+  author: "Example User"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 524288
+
+  decisions:
+    state:
+      type: "choice"
+      values:
+        - healthy
+        - delayed
+        - stuck
+        - crashed
+        - unknown
+
+    severity:
+      type: "score"
+      min: 0
+      max: 5
+      levels:
+        - "Normal: no errors or anomalies in the signals"
+        - "Informational: notable events with no impact on service"
+        - "Minor: isolated errors or warnings with no user-visible impact"
+        - "Degraded: partial impairment, elevated errors or latency for some users or requests"
+        - "Serious: a major component is failing or most requests are affected; urgent action needed"
+        - "Critical: outage, data loss or corruption risk, or active security compromise"
+
+    intervention_required:
+      type: "boolean"
+
+  instructions: |
+    Analyze diagnostic output from the queue service.
+
+    Determine its current operational state and whether
+    administrator intervention is required.

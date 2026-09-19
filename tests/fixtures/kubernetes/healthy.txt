@@ -1,0 +1,12 @@
+NAME                              READY   STATUS    RESTARTS   AGE
+frontend-gateway-6bb949449f-xrq52  1/1     Running   0          3d
+frontend-gateway-6bb949449f-z8fkl  1/1     Running   0          3d
+payment-api-8594b9f478-4tqmp       1/1     Running   0          5d
+
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  3d    default-scheduler  Successfully assigned default/frontend-gateway-6bb949449f-xrq52 to worker-01
+  Normal  Pulled     3d    kubelet            Container image already present on machine
+  Normal  Created    3d    kubelet            Created container gateway
+  Normal  Started    3d    kubelet            Started container gateway

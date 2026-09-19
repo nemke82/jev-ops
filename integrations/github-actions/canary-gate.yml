@@ -1,0 +1,61 @@
+name: Canary Health Gate
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      canary_metrics_file:
+        required: true
+        type: string
+    secrets:
+      TYPESAFE_API_KEY:
+        required: true
+
+jobs:
+  canary-evaluation:
+    name: Evaluate Canary Health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install jev-ops
+        run: |
+          curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-v2026.09.19-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+          sudo mv jev-ops-v2026.09.19-x86_64-unknown-linux-gnu/jev-ops /usr/local/bin/
+
+      # Inputs and outputs go through env vars, never ${{ }} inside the script,
+      # so a crafted file name or model output cannot inject shell commands.
+      - name: Analyze Canary Metrics
+        id: analyze
+        env:
+          METRICS_FILE: ${{ inputs.canary_metrics_file }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: |
+          DECISION_JSON=$(jev-ops analyze ci-canary --json --input "$METRICS_FILE")
+
+          ACTION=$(jq -r '.decisions.rollout_action.value' <<<"$DECISION_JSON")
+          ROLLBACK=$(jq -r '.decisions.rollback_now.value' <<<"$DECISION_JSON")
+          CONF=$(jq -r '.decisions.rollout_action.confidence' <<<"$DECISION_JSON")
+
+          {
+            echo "decision_json=$(jq -c . <<<"$DECISION_JSON")"
+            echo "action=${ACTION}"
+            echo "rollback=${ROLLBACK}"
+            echo "confidence=${CONF}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Gate Check
+        env:
+          ACTION: ${{ steps.analyze.outputs.action }}
+          ROLLBACK: ${{ steps.analyze.outputs.rollback }}
+          CONFIDENCE: ${{ steps.analyze.outputs.confidence }}
+        run: |
+          if [ "$ROLLBACK" = "true" ] || [ "$ACTION" = "rollback" ]; then
+            echo "❌ Canary gate failed! High-risk error spike detected (Action: ${ACTION}, Confidence: ${CONFIDENCE})."
+            exit 1
+          elif [ "$ACTION" != "promote" ]; then
+            echo "⏸️ Canary not cleared for promotion (Action: ${ACTION}, Confidence: ${CONFIDENCE})."
+            exit 1
+          else
+            echo "✅ Canary deployment healthy (Confidence: ${CONFIDENCE}). Proceeding with full fleet rollout."
+          fi

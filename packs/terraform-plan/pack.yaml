@@ -1,0 +1,47 @@
+api_version: "jev-ops/v1"
+kind: "DiagnosticPack"
+
+metadata:
+  name: "terraform-plan"
+  version: "0.1.0"
+  description: "Terraform / OpenTofu plan blast-radius and destructive-change review"
+  author: "jev-ops"
+
+spec:
+  input:
+    type: "text"
+    max_bytes: 1048576
+
+  decisions:
+    change_risk:
+      type: "choice"
+      values:
+        - routine
+        - config_drift
+        - data_loss
+        - network_disruption
+        - privilege_escalation
+        - unknown
+
+    blast_radius:
+      type: "score"
+      min: 0
+      max: 5
+      levels:
+        - "No infrastructure changes, or only tags, descriptions, and outputs"
+        - "Additive changes only: new resources with no effect on existing ones"
+        - "In-place updates to non-critical resources that are easy to revert"
+        - "Replacement or update of stateless production resources, such as instances or load balancer rules"
+        - "Changes to shared networking, IAM policies, or DNS that many services depend on"
+        - "Deletion or replacement of stateful data stores, or broad privilege grants"
+
+    destroys_stateful_resource:
+      type: "boolean"
+
+  instructions: |
+    The input is a summary of a Terraform or OpenTofu plan: one line per resource change,
+    formatted as "<actions> <resource address>", where actions include create, update,
+    delete, and replace (delete+create).
+    Judge how much existing infrastructure the plan could disrupt if applied.
+    Stateful resources include databases, disks, buckets, queues, and state/backups.
+    Treat replacement of a stateful resource as destructive.
