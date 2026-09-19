@@ -116,9 +116,10 @@ pub fn list_available_packs(custom_dir: Option<&Path>) -> Vec<DiscoveredPack> {
 
     // 0. Seed with compiled-in builtin packs (lowest precedence)
     for builtin in BUILTIN_PACKS {
-        if let Ok(manifest) =
-            load_manifest_from_str(builtin.yaml_content, &format!("<embedded:{}>", builtin.name))
-        {
+        if let Ok(manifest) = load_manifest_from_str(
+            builtin.yaml_content,
+            &format!("<embedded:{}>", builtin.name),
+        ) {
             packs_by_name.insert(
                 manifest.metadata.name.clone(),
                 DiscoveredPack {
