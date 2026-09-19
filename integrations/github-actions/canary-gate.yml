@@ -20,8 +20,8 @@ jobs:
     steps:
       - name: Install jev-ops
         run: |
-          curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-v2026.09.19-x86_64-unknown-linux-gnu.tar.gz | tar -xz
-          sudo mv jev-ops-v2026.09.19-x86_64-unknown-linux-gnu/jev-ops /usr/local/bin/
+          sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-unknown-linux-gnu -o /usr/local/bin/jev-ops
+          sudo chmod +x /usr/local/bin/jev-ops
 
       # Inputs and outputs go through env vars, never ${{ }} inside the script,
       # so a crafted file name or model output cannot inject shell commands.
