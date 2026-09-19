@@ -492,12 +492,32 @@ jev-ops completion fish > ~/.config/fish/completions/jev-ops.fish
 
 ## Roadmap
 
-- **v2026.09.19 (v0.1)**: Core extensible architecture, external YAML packs, stdin streaming, live TypeSafe Jev provider, deterministic mock inference, security limits, fixture tests, GitHub Actions multi-platform releases.
-- **v0.3**: Safe, declarative system collectors (Linux `systemd`, `procfs`, `sysfs`).
-- **v0.4**: Container & Kubernetes collectors (`cgroup`, `kubectl`, container runtime sockets).
-- **v0.5**: Remote collection over SSH (`ssh://user@host`).
-- **v0.6**: Multi-signal correlation and progressive diagnostics engine (`jev-ops doctor`).
-- **v0.7**: Community Diagnostic Pack Registry (`jev-ops pack install <name>`).
+- **v2026.09.19 (Current Release)**:
+  - Core extensible CLI and streaming pipeline with standard exit codes (`0`–`6`).
+  - Direct integration with TypeSafe System One flagship model (`api.typesafe.ai/v1`) and offline mock fallback.
+  - 11 production diagnostic packs covering AWS CloudWatch, Azure Monitor, GCP Cloud Ops, Linux, Kubernetes, Docker, Nginx, MySQL, CheckMK, Canary, and Example.
+  - Multi-cloud automation recipes for AWS Lambda SSM, Azure Monitor webhooks, GCP Cloud Run auto-healing, and Terraform plan safety gates.
+  - Automated multi-platform GitHub Releases (Linux x86_64/arm64/musl, macOS Darwin Apple Silicon/Intel, Windows) and live GitHub Pages showcase.
+
+- **v2026.10 (Cloud Streaming & OpenTelemetry)**:
+  - Native OpenTelemetry (OTel) log record and span ingestion.
+  - CloudWatch, Azure Monitor, and GCP Cloud Logging stream helpers (`jev-ops stream aws --log-group <name>`).
+  - JSON Schema generation for pack authors (`jev-ops packs schema`).
+  - Interactive shell auto-completion for dynamically installed packs.
+
+- **v2026.11 (Pack Ecosystem & Distribution)**:
+  - Git-based pack manager (`jev-ops packs install github.com/<org>/<pack>`).
+  - Semantic pack version pinning and compatibility verification.
+  - Incident replay and regression testing harness (`jev-ops replay incident.log --pack <name>`).
+
+- **v2026.12 (Multi-Signal Correlation & Rich SRE Webhooks)**:
+  - Cross-pack cascading correlation: evaluate simultaneous network, database, and container signals into a unified root-cause decision.
+  - Built-in Slack, PagerDuty, and Microsoft Teams webhook formatters with rich Block Kit triage cards.
+  - Configurable policy engine for automated confidence gates (`--min-confidence 0.90`).
+
+- **v2027.01+ (Kubernetes Operator & Air-Gapped Inference)**:
+  - Kubernetes Auto-Remediation Operator (`jev-ops-operator`) with CRD-driven diagnostic routing.
+  - Local edge model execution fallback for air-gapped and disconnected environments.
 
 ---
 
