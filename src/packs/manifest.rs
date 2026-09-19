@@ -5,6 +5,7 @@ pub const CURRENT_API_VERSION: &str = "jev-ops/v1";
 pub const CURRENT_KIND: &str = "DiagnosticPack";
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PackManifest {
     pub api_version: String,
     pub kind: String,
@@ -13,6 +14,7 @@ pub struct PackManifest {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PackMetadata {
     pub name: String,
     pub version: String,
@@ -21,6 +23,7 @@ pub struct PackMetadata {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PackSpec {
     #[serde(default)]
     pub input: InputSpec,
@@ -29,6 +32,7 @@ pub struct PackSpec {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct InputSpec {
     #[serde(rename = "type", default = "default_input_type")]
     pub input_type: String,
@@ -50,10 +54,18 @@ impl Default for InputSpec {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "lowercase")]
+#[serde(tag = "type", rename_all = "lowercase", deny_unknown_fields)]
 pub enum DecisionSpec {
-    Choice { values: Vec<String> },
-    Score { min: i64, max: i64 },
+    Choice {
+        values: Vec<String>,
+    },
+    Score {
+        min: i64,
+        max: i64,
+        /// Optional description of each level, ordered from `min` to `max`.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        levels: Vec<String>,
+    },
     Boolean,
 }
 

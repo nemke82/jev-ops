@@ -25,6 +25,13 @@ spec:
       type: "score"
       min: 0
       max: 5
+      levels:
+        - "No business impact"
+        - "Negligible: internal or cosmetic issue only"
+        - "Minor: a few users inconvenienced and a workaround exists"
+        - "Moderate: a feature is impaired for many users"
+        - "Major: core functionality unavailable for many users"
+        - "Critical: full outage or data loss"
 
     alert_oncall:
       type: "boolean"

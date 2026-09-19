@@ -58,10 +58,12 @@ impl InferenceProvider for MockInferenceProvider {
             || text.contains("/aws/ecs")
             || text.contains("awslogs");
 
-        let is_azure = text.contains("probe")
-            || text.contains("App Gateway")
-            || text.contains("502")
-            || text.contains("aks")
+        // Match specific phrases only: bare substrings like "502" or "aks" hit PIDs and words like "leaks".
+        let is_azure = text.contains("App Gateway")
+            || text.contains("Application Gateway")
+            || text.contains("502 Bad Gateway")
+            || text.contains("Health probe")
+            || text.contains("AKS")
             || text.contains("Alert Rule");
 
         let is_gcp = text.contains("Cloud Run")
@@ -191,7 +193,7 @@ impl InferenceProvider for MockInferenceProvider {
                         probabilities: None,
                     }
                 }
-                DecisionSpec::Score { min, max } => {
+                DecisionSpec::Score { min, max, .. } => {
                     let (val, conf) = if is_ext4 {
                         (*max, 0.91)
                     } else if is_oom || is_k8s_oom || is_aws || is_gcp {

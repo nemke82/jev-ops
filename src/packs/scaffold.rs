@@ -57,14 +57,22 @@ spec:
       type: "score"
       min: 0
       max: 5
+      # One description per level, from min to max (optional but recommended)
+      levels:
+        - "Normal: no errors or anomalies in the signals"
+        - "Informational: notable events with no impact on service"
+        - "Minor: isolated errors or warnings with no user-visible impact"
+        - "Degraded: partial impairment affecting some users or requests"
+        - "Serious: a major component is failing; urgent action needed"
+        - "Critical: outage, data loss risk, or security compromise"
 
     needs_attention:
       type: "boolean"
 
   instructions: |
     Analyze the supplied diagnostic signals for {name}.
-    Classify the operational health, severity level (0=normal to 5=critical),
-    and whether immediate operator intervention is needed.
+    Classify the operational health, severity level, and whether immediate
+    operator intervention is needed.
 "#,
         name = name
     );

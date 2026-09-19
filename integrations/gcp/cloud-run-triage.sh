@@ -8,8 +8,9 @@
 # How it works:
 #   1. Fetches recent error logs for Cloud Run revision or GKE workload.
 #   2. Pipes JSON payload directly into `jev-ops analyze gcp-cloud-ops --json`.
-#   3. Evaluates decisions: if root_cause == 'container_exited_137' (OOM) and confidence >= 85%,
-#      deploys revision with doubled memory limit.
+#   3. Evaluates decisions: if recommended_action == 'restart_revision' and confidence >= 85%,
+#      deploys a revision with a higher memory limit.
+#   Exits non-zero if logs cannot be fetched or analyzed: automation never acts on missing data.
 # ==============================================================================
 
 set -euo pipefail
@@ -20,13 +21,24 @@ CONFIDENCE_GATE=85
 
 echo "[jev-ops GCP] Pulling recent error logs from Google Cloud Logging for ${SERVICE_NAME}..."
 
-RAW_LOGS=$(gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${SERVICE_NAME} AND severity>=WARNING" \
+if ! RAW_LOGS=$(gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${SERVICE_NAME} AND severity>=WARNING" \
   --project="${PROJECT_ID}" \
   --limit=25 \
-  --format="value(textPayload)" 2>/dev/null || echo "2026-09-19T10:15:30Z [CRITICAL] Memory limit of 512 MiB exceeded with 536 MiB used. Container terminated with exit code 137.")
+  --format="value(textPayload)"); then
+    echo "[jev-ops GCP] ERROR: failed to read Cloud Logging for ${SERVICE_NAME}." >&2
+    exit 1
+fi
+
+if [ -z "${RAW_LOGS//[[:space:]]/}" ]; then
+    echo "[jev-ops GCP] No warning-or-worse log entries for ${SERVICE_NAME}. Nothing to triage."
+    exit 0
+fi
 
 echo "[jev-ops GCP] Invoking System One diagnostic pipeline..."
-DIAG_RESULT=$(echo "$RAW_LOGS" | jev-ops analyze gcp-cloud-ops --json)
+if ! DIAG_RESULT=$(printf '%s\n' "$RAW_LOGS" | jev-ops analyze gcp-cloud-ops --json); then
+    echo "[jev-ops GCP] ERROR: analysis failed; alerting on-call instead of acting." >&2
+    exit 2
+fi
 
 HEALTH=$(echo "$DIAG_RESULT" | jq -r '.decisions.health.value')
 CAUSE=$(echo "$DIAG_RESULT" | jq -r '.decisions.root_cause.value')

@@ -7,12 +7,20 @@
 #   terraform show -json tfplan.binary | ./plan-triage.sh
 #
 # How it works:
-#   1. Parses JSON changes from Terraform plan.
-#   2. Pipes change summary to `jev-ops` to detect accidental DB drops, VPC routing mutations, or IAM privilege grants.
-#   3. Exits with 0 if safe, or blocks CI/CD merge if catastrophic blast radius detected.
+#   1. Summarizes the plan JSON to one "<actions> <address>" line per changed resource,
+#      which keeps large plans well under the pack's input limit.
+#   2. Pipes the summary to `jev-ops analyze terraform-plan` to judge blast radius.
+#   3. Exits 0 if safe. Exits 1 (blocking the pipeline) on a risky plan OR on any
+#      failure to evaluate it: this gate fails closed.
 # ==============================================================================
 
 set -euo pipefail
+
+block() {
+    echo "❌ [BLOCK] $1"
+    echo "Requires senior SRE dual-approval before 'terraform apply'."
+    exit 1
+}
 
 PLAN_INPUT=$(cat -)
 
@@ -21,18 +29,34 @@ if [ -z "$PLAN_INPUT" ]; then
     exit 1
 fi
 
-echo "[jev-ops Terraform] Analyzing plan resource changes and blast radius..."
+if ! SUMMARY=$(jq -r '
+        .resource_changes // []
+        | map(select(.change.actions != ["no-op"] and .change.actions != ["read"]))
+        | .[]
+        | "\(.change.actions | join("+")) \(.address)"' <<<"$PLAN_INPUT"); then
+    block "Could not parse plan JSON (expected 'terraform show -json' output)."
+fi
 
-# Run jev-ops against docker or custom cloud pack
-DIAG_RESULT=$(echo "$PLAN_INPUT" | jev-ops analyze aws-cloudwatch --json 2>/dev/null || echo '{"decisions":{"health":{"value":"healthy"},"severity":{"value":0}}}')
-
-SEVERITY=$(echo "$DIAG_RESULT" | jq -r '.decisions.severity.value // 0')
-
-if [ "$SEVERITY" -ge 4 ]; then
-    echo "❌ [BLOCK] jev-ops detected critical blast radius (Severity $SEVERITY/5)!"
-    echo "Requires senior SRE dual-approval before 'terraform apply'."
-    exit 1
-else
-    echo "✅ [PASS] Plan verified safe for automated deployment pipeline."
+if [ -z "$SUMMARY" ]; then
+    echo "✅ [PASS] Plan contains no resource changes."
     exit 0
 fi
+
+echo "[jev-ops Terraform] Analyzing $(wc -l <<<"$SUMMARY") resource changes for blast radius..."
+
+if ! DIAG_RESULT=$(jev-ops analyze terraform-plan --json <<<"$SUMMARY"); then
+    block "jev-ops could not evaluate the plan; refusing to pass it unreviewed."
+fi
+
+BLAST_RADIUS=$(jq -r '.decisions.blast_radius.value' <<<"$DIAG_RESULT")
+DESTROYS_STATE=$(jq -r '.decisions.destroys_stateful_resource.value' <<<"$DIAG_RESULT")
+CHANGE_RISK=$(jq -r '.decisions.change_risk.value' <<<"$DIAG_RESULT")
+
+if [ "$DESTROYS_STATE" = "true" ]; then
+    block "jev-ops detected destruction of a stateful resource (risk: ${CHANGE_RISK})."
+elif [ "$BLAST_RADIUS" -ge 4 ]; then
+    block "jev-ops detected critical blast radius (${BLAST_RADIUS}/5, risk: ${CHANGE_RISK})."
+fi
+
+echo "✅ [PASS] Plan within automated deployment limits (blast radius ${BLAST_RADIUS}/5, risk: ${CHANGE_RISK})."
+exit 0

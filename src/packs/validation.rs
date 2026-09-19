@@ -5,6 +5,7 @@ use crate::error::{JevOpsError, Result};
 use crate::packs::manifest::{DecisionSpec, PackManifest, CURRENT_API_VERSION, CURRENT_KIND};
 use crate::security::limits::{
     ABSOLUTE_MAX_INPUT_BYTES, MAX_CHOICE_VALUES_COUNT, MAX_DECISION_COUNT, MAX_INSTRUCTIONS_BYTES,
+    MAX_SCORE_LEVELS,
 };
 use crate::security::validation::validate_pack_name;
 
@@ -136,11 +137,39 @@ pub fn validate_manifest(manifest: &PackManifest) -> Result<()> {
                     }
                 }
             }
-            DecisionSpec::Score { min, max } => {
+            DecisionSpec::Score { min, max, levels } => {
                 if min >= max {
                     errors.push(format!(
                         "spec.decisions.{}:\nscore minimum ({}) must be lower than maximum ({})",
                         name, min, max
+                    ));
+                } else {
+                    // Checked arithmetic: extreme i64 bounds must not overflow.
+                    let level_count = max.checked_sub(*min).and_then(|d| d.checked_add(1));
+                    match level_count {
+                        Some(count) if count <= MAX_SCORE_LEVELS => {
+                            if !levels.is_empty() && levels.len() as i64 != count {
+                                errors.push(format!(
+                                    "spec.decisions.{}: score defines {} levels but range [{}, {}] requires {}",
+                                    name,
+                                    levels.len(),
+                                    min,
+                                    max,
+                                    count
+                                ));
+                            }
+                        }
+                        _ => errors.push(format!(
+                            "spec.decisions.{}: score range [{}, {}] exceeds maximum of {} levels",
+                            name, min, max, MAX_SCORE_LEVELS
+                        )),
+                    }
+                }
+
+                if levels.iter().any(|l| l.trim().is_empty()) {
+                    errors.push(format!(
+                        "spec.decisions.{}: score level description cannot be empty",
+                        name
                     ));
                 }
             }
@@ -173,7 +202,11 @@ mod tests {
         );
         decisions.insert(
             "severity".to_string(),
-            DecisionSpec::Score { min: 0, max: 5 },
+            DecisionSpec::Score {
+                min: 0,
+                max: 5,
+                levels: vec![],
+            },
         );
         decisions.insert("needs_attention".to_string(), DecisionSpec::Boolean);
 
@@ -205,7 +238,11 @@ mod tests {
         let mut m = make_valid_manifest();
         m.spec.decisions.insert(
             "severity".to_string(),
-            DecisionSpec::Score { min: 5, max: 3 },
+            DecisionSpec::Score {
+                min: 5,
+                max: 3,
+                levels: vec![],
+            },
         );
         let res = validate_manifest(&m);
         assert!(res.is_err());
@@ -213,6 +250,46 @@ mod tests {
             .unwrap_err()
             .to_string()
             .contains("score minimum (5) must be lower than maximum (3)"));
+    }
+
+    #[test]
+    fn test_score_range_too_large() {
+        let mut m = make_valid_manifest();
+        m.spec.decisions.insert(
+            "severity".to_string(),
+            DecisionSpec::Score {
+                min: 0,
+                max: 50_000_000,
+                levels: vec![],
+            },
+        );
+        let err = validate_manifest(&m).unwrap_err().to_string();
+        assert!(err.contains("exceeds maximum of 10 levels"));
+
+        m.spec.decisions.insert(
+            "severity".to_string(),
+            DecisionSpec::Score {
+                min: i64::MIN,
+                max: i64::MAX,
+                levels: vec![],
+            },
+        );
+        assert!(validate_manifest(&m).is_err());
+    }
+
+    #[test]
+    fn test_score_levels_must_match_range() {
+        let mut m = make_valid_manifest();
+        m.spec.decisions.insert(
+            "severity".to_string(),
+            DecisionSpec::Score {
+                min: 1,
+                max: 3,
+                levels: vec!["low".to_string(), "high".to_string()],
+            },
+        );
+        let err = validate_manifest(&m).unwrap_err().to_string();
+        assert!(err.contains("defines 2 levels but range [1, 3] requires 3"));
     }
 
     #[test]

@@ -12,7 +12,7 @@ fn test_decision_linux_oom() {
         Some(std::path::Path::new(fixture)),
         None,
         None,
-        None,
+        Some("mock"),
         None,
     )
     .unwrap();
@@ -50,7 +50,7 @@ fn test_decision_linux_ext4() {
         Some(std::path::Path::new(fixture)),
         None,
         None,
-        None,
+        Some("mock"),
         None,
     )
     .unwrap();
@@ -76,7 +76,7 @@ fn test_decision_linux_ssh_bruteforce() {
         Some(std::path::Path::new(fixture)),
         None,
         None,
-        None,
+        Some("mock"),
         None,
     )
     .unwrap();
@@ -96,7 +96,7 @@ fn test_decision_kubernetes_crashloop() {
         Some(std::path::Path::new(fixture)),
         None,
         None,
-        None,
+        Some("mock"),
         None,
     )
     .unwrap();
@@ -116,7 +116,7 @@ fn test_decision_kubernetes_oomkilled() {
         Some(std::path::Path::new(fixture)),
         None,
         None,
-        None,
+        Some("mock"),
         None,
     )
     .unwrap();
@@ -136,7 +136,7 @@ fn test_decision_healthy() {
         Some(std::path::Path::new(fixture)),
         None,
         None,
-        None,
+        Some("mock"),
         None,
     )
     .unwrap();
@@ -189,7 +189,11 @@ fn test_provider_schema_enforcement_bad_score() {
     let mut expected = BTreeMap::new();
     expected.insert(
         "severity".to_string(),
-        DecisionSpec::Score { min: 0, max: 5 },
+        DecisionSpec::Score {
+            min: 0,
+            max: 5,
+            levels: vec![],
+        },
     );
 
     let mut actual = BTreeMap::new();

@@ -40,7 +40,7 @@ pub enum Commands {
         pack_dir: Option<PathBuf>,
 
         /// Flag decisions below confidence threshold (0.0 to 1.0)
-        #[arg(long)]
+        #[arg(long, value_parser = parse_confidence)]
         min_confidence: Option<f64>,
 
         /// Inference provider to use ('mock' or 'typesafe')
@@ -111,4 +111,15 @@ pub enum PacksCommands {
         #[arg(long)]
         dir: Option<PathBuf>,
     },
+}
+
+fn parse_confidence(raw: &str) -> Result<f64, String> {
+    let value: f64 = raw
+        .parse()
+        .map_err(|_| format!("'{}' is not a number", raw))?;
+    if (0.0..=1.0).contains(&value) {
+        Ok(value)
+    } else {
+        Err(format!("{} is outside the valid range 0.0 to 1.0", value))
+    }
 }

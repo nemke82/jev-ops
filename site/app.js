@@ -707,7 +707,7 @@ function renderOutput() {
   } else if (currentView === "human") {
     let text = `jev-ops analysis\n\n`;
     text += `Pack:       ${scenario.pack} 0.1.0\n`;
-    text += `Provider:   typesafe-jev (jev-latest)\n`;
+    text += `Provider:   typesafe-jev (jev-latest) [sample]\n`;
     text += `Input:      ${scenario.input.length} B\n\n`;
     scenario.decisions.forEach(d => {
       const padName = (d.name + ":").padEnd(12, " ");

@@ -32,16 +32,17 @@ pub fn resolve_provider(
             other
         ))),
         None => {
-            // Auto-detect: if TYPESAFE_API_KEY is present, use live provider; otherwise mock.
-            if let Some(key) = api_key
+            // Auto-detect the live provider from the API key. Never fall back to the mock
+            // silently: automation acting on keyword heuristics must be an explicit choice.
+            let key = api_key
                 .map(|s| s.to_string())
                 .or_else(|| std::env::var("TYPESAFE_API_KEY").ok())
                 .filter(|s| !s.trim().is_empty())
-            {
-                Ok(Box::new(TypeSafeJevProvider::new(key)))
-            } else {
-                Ok(Box::new(MockInferenceProvider::new()))
-            }
+                .ok_or_else(|| JevOpsError::ProviderError {
+                    provider: "typesafe-jev".to_string(),
+                    details: "No API key found. Provide --api-key or set TYPESAFE_API_KEY, or pass --provider mock for offline heuristic output.".to_string(),
+                })?;
+            Ok(Box::new(TypeSafeJevProvider::new(key)))
         }
     }
 }

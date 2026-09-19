@@ -5,7 +5,7 @@ use tracing_subscriber::EnvFilter;
 
 use jev_ops::cli::{Cli, Commands, PacksCommands, VERSION_STRING};
 use jev_ops::engine;
-use jev_ops::error::{self, Result};
+use jev_ops::error::Result;
 use jev_ops::output;
 use jev_ops::packs;
 
@@ -26,13 +26,8 @@ fn setup_logging(verbosity: u8) {
 }
 
 fn main() {
-    let cli = match Cli::try_parse() {
-        Ok(args) => args,
-        Err(err) => {
-            eprintln!("{}", err);
-            process::exit(error::exit_codes::INVALID_CLI_USAGE);
-        }
-    };
+    // clap prints --help/--version to stdout with exit 0, and usage errors to stderr with exit 2.
+    let cli = Cli::parse();
 
     setup_logging(cli.verbose);
 
@@ -108,11 +103,7 @@ fn run(cli: Cli) -> Result<()> {
                     );
                     println!("{}", "─".repeat(80));
                     for p in available_packs {
-                        let desc = if p.manifest.metadata.description.len() > 38 {
-                            format!("{}...", &p.manifest.metadata.description[..35])
-                        } else {
-                            p.manifest.metadata.description
-                        };
+                        let desc = truncate_chars(&p.manifest.metadata.description, 38);
                         println!(
                             "{:<18} {:<10} {:<40} {}",
                             p.name,
@@ -150,8 +141,11 @@ fn run(cli: Cli) -> Result<()> {
                             packs::manifest::DecisionSpec::Choice { values } => {
                                 println!("  - {}: choice (options: {})", name, values.join(", "));
                             }
-                            packs::manifest::DecisionSpec::Score { min, max } => {
+                            packs::manifest::DecisionSpec::Score { min, max, levels } => {
                                 println!("  - {}: score (range: {} to {})", name, min, max);
+                                for (value, level) in (*min..=*max).zip(levels) {
+                                    println!("      {}: {}", value, level);
+                                }
                             }
                             packs::manifest::DecisionSpec::Boolean => {
                                 println!("  - {}: boolean (yes/no)", name);
@@ -182,4 +176,14 @@ fn run(cli: Cli) -> Result<()> {
             }
         },
     }
+}
+
+/// Shortens `text` to at most `max` characters, ending with "..." when cut.
+/// Counts chars, not bytes, so multi-byte UTF-8 descriptions never split mid-character.
+fn truncate_chars(text: &str, max: usize) -> String {
+    if text.chars().count() <= max {
+        return text.to_string();
+    }
+    let kept: String = text.chars().take(max.saturating_sub(3)).collect();
+    format!("{}...", kept)
 }

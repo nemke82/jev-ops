@@ -15,7 +15,21 @@ pub struct PipelineResult {
     pub provider: String,
     pub input: InputContext,
     pub decisions: BTreeMap<String, ProviderDecision>,
+    pub decision_specs: BTreeMap<String, DecisionSpec>,
     pub min_confidence: Option<f64>,
+}
+
+impl PipelineResult {
+    /// Names of decisions whose confidence falls below `--min-confidence`, if one was given.
+    pub fn low_confidence_decisions(&self) -> Option<Vec<String>> {
+        self.min_confidence.map(|threshold| {
+            self.decisions
+                .iter()
+                .filter(|(_, d)| d.confidence() < threshold)
+                .map(|(name, _)| name.clone())
+                .collect()
+        })
+    }
 }
 
 /// Executes the full end-to-end diagnostic pipeline.
@@ -65,6 +79,7 @@ pub fn run_pipeline(
         provider: response.provider,
         input: input_data.context,
         decisions: response.decisions,
+        decision_specs: manifest.spec.decisions,
         min_confidence,
     })
 }
@@ -99,7 +114,7 @@ pub fn validate_provider_response(
                     )));
                 }
             }
-            (DecisionSpec::Score { min, max }, ProviderDecision::Score { value, .. }) => {
+            (DecisionSpec::Score { min, max, .. }, ProviderDecision::Score { value, .. }) => {
                 if value < min || value > max {
                     return Err(JevOpsError::InvalidProviderResponse(format!(
                         "Decision '{}': score {} is outside allowed range [{}, {}]",
@@ -171,7 +186,11 @@ mod tests {
         let mut expected = BTreeMap::new();
         expected.insert(
             "severity".to_string(),
-            DecisionSpec::Score { min: 0, max: 5 },
+            DecisionSpec::Score {
+                min: 0,
+                max: 5,
+                levels: vec![],
+            },
         );
 
         let mut actual = BTreeMap::new();

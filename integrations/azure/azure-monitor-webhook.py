@@ -8,15 +8,25 @@ Flow:
   3. Pipes error telemetry into `jev-ops analyze azure-monitor --json`.
   4. If action == 'auto_heal' and confidence > 85%, invokes Azure CLI (`az`) or Azure SDK.
   5. Emits structured telemetry to Azure App Insights or logs.
+
+Security:
+  - Requests must carry the shared secret from WEBHOOK_TOKEN, sent by the Action Group
+    as the `token` query parameter (https://host/?token=...) or an `X-Webhook-Token` header.
+  - Binds to 127.0.0.1 unless HOST is set; put it behind TLS termination before exposing it.
 """
 
+import hmac
 import json
 import os
 import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlparse
 
+HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "8080"))
+WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
+MAX_BODY_BYTES = 1024 * 1024
 CONFIDENCE_THRESHOLD = 0.85
 
 def handle_azure_alert(payload: dict) -> dict:
@@ -67,22 +77,42 @@ def handle_azure_alert(payload: dict) -> dict:
     }
 
 class AzureWebhookHandler(BaseHTTPRequestHandler):
+    def _reply(self, status: int, body: dict) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(body).encode())
+
+    def _authorized(self) -> bool:
+        supplied = self.headers.get("X-Webhook-Token") or parse_qs(
+            urlparse(self.path).query
+        ).get("token", [""])[0]
+        return hmac.compare_digest(supplied.encode(), WEBHOOK_TOKEN.encode())
+
     def do_POST(self):
-        content_len = int(self.headers.get("Content-Length", 0))
-        post_body = self.rfile.read(content_len)
+        if not self._authorized():
+            self._reply(401, {"error": "unauthorized"})
+            return
+
         try:
-            payload = json.loads(post_body.decode())
-            response = handle_azure_alert(payload)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode())
+            content_len = int(self.headers.get("Content-Length", 0))
+        except ValueError:
+            content_len = -1
+        if not 0 < content_len <= MAX_BODY_BYTES:
+            self._reply(413, {"error": "missing or oversized body"})
+            return
+
+        try:
+            payload = json.loads(self.rfile.read(content_len).decode())
+            self._reply(200, handle_azure_alert(payload))
         except Exception as e:
-            self.send_response(500)
-            self.end_headers()
-            self.wfile.write(str(e).encode())
+            # Log details server-side; never echo internals to the caller.
+            print(f"[jev-ops webhook] failed to handle alert: {e!r}", file=sys.stderr)
+            self._reply(500, {"error": "internal error"})
 
 if __name__ == "__main__":
-    print(f"Starting Azure Monitor jev-ops webhook listener on port {PORT}...")
-    server = HTTPServer(("0.0.0.0", PORT), AzureWebhookHandler)
+    if not WEBHOOK_TOKEN:
+        sys.exit("WEBHOOK_TOKEN must be set to a long random secret.")
+    print(f"Starting Azure Monitor jev-ops webhook listener on {HOST}:{PORT}...")
+    server = HTTPServer((HOST, PORT), AzureWebhookHandler)
     server.serve_forever()

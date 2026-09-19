@@ -15,7 +15,11 @@ fn valid_manifest() -> PackManifest {
     );
     decisions.insert(
         "severity".to_string(),
-        DecisionSpec::Score { min: 0, max: 5 },
+        DecisionSpec::Score {
+            min: 0,
+            max: 5,
+            levels: vec![],
+        },
     );
     decisions.insert("needs_attention".to_string(), DecisionSpec::Boolean);
 
@@ -78,7 +82,11 @@ fn test_invalid_score_range() {
     let mut m = valid_manifest();
     m.spec.decisions.insert(
         "severity".to_string(),
-        DecisionSpec::Score { min: 5, max: 2 },
+        DecisionSpec::Score {
+            min: 5,
+            max: 2,
+            levels: vec![],
+        },
     );
     let err = validate_manifest(&m).unwrap_err().to_string();
     assert!(err.contains("score minimum (5) must be lower than maximum (2)"));

@@ -34,6 +34,13 @@ spec:
       type: "score"
       min: 0
       max: 5
+      levels:
+        - "Canary matches or beats baseline on errors and latency"
+        - "Negligible deviation from baseline, within normal noise"
+        - "Small, tolerable regression in error rate or latency"
+        - "Clear regression that warrants holding the rollout"
+        - "Severe regression in 5xx rate or p99 latency; rollback advised"
+        - "Canary is failing outright; roll back immediately"
 
     rollback_now:
       type: "boolean"

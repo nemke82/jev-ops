@@ -18,5 +18,8 @@ pub const MAX_DECISION_COUNT: usize = 64;
 /// Maximum number of choice values in a Choice decision (128).
 pub const MAX_CHOICE_VALUES_COUNT: usize = 128;
 
+/// Maximum number of levels in a Score decision (`max - min + 1`), as accepted by TypeSafe (10).
+pub const MAX_SCORE_LEVELS: i64 = 10;
+
 /// Maximum length of a pack name (64 chars).
 pub const MAX_PACK_NAME_LEN: usize = 64;

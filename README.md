@@ -38,7 +38,7 @@ Linux / Kubernetes / Logs / Monitoring
 > ```bash
 > export TYPESAFE_API_KEY="ts_live_..."
 > ```
-> `jev-ops` automatically detects your key and connects to the `jev-latest` model. Use `--provider mock` to force offline evaluation anytime.
+> `jev-ops` automatically detects your key and connects to the `jev-latest` model. Without a key, `analyze` exits with code `5` rather than guessing; pass `--provider mock` explicitly for offline, keyword-based output (useful for demos and tests, never for automation).
 
 ---
 
@@ -64,7 +64,7 @@ In accordance with [TypeSafe AI's System One architecture](https://docs.typesafe
 | Primitive | Purpose | Returns |
 | :--- | :--- | :--- |
 | **`choice`** | Classify into discrete domain categories | Selected option, confidence score (0.0–1.0), and probabilities distribution |
-| **`score`** | Score system state on a numerical rubric (e.g. 0 to 5) | Numerical score, confidence, and probabilities distribution |
+| **`score`** | Score system state on a rubric of 2–10 described levels (e.g. 0 to 5) | Numerical score in the pack's range, confidence, and probabilities distribution |
 | **`boolean`** (Noul) | Binary condition check ("Is attention required?") | `yes` / `no`, confidence score (0.0–1.0) |
 
 ---
@@ -120,7 +120,7 @@ kubectl get pods -A | jev-ops analyze kubernetes
 Perfect for scripts, monitoring hooks, or automation agents:
 
 ```bash
-cat tests/fixtures/linux/ext4-error.txt | jev-ops analyze linux --json
+cat tests/fixtures/linux/ext4-error.txt | jev-ops analyze linux --provider mock --json
 ```
 
 Output:
@@ -170,7 +170,7 @@ $ cat error.log | jev-ops analyze linux --json | jq '.decisions.severity.value'
 ### 3. Human-Readable Terminal Summary
 
 ```bash
-$ cat tests/fixtures/linux/ext4-error.txt | jev-ops analyze linux
+$ cat tests/fixtures/linux/ext4-error.txt | jev-ops analyze linux --provider mock
 jev-ops analysis
 
 Pack:       linux 0.1.0   
@@ -190,6 +190,8 @@ Filter or flag decisions when the model reports uncertainty:
 ```bash
 cat dmesg.log | jev-ops analyze linux --min-confidence 0.95
 ```
+
+The threshold must be between `0.0` and `1.0`. Human output marks weak decisions with `[LOW CONFIDENCE]`; with `--json`, the output adds `min_confidence` and a `low_confidence` array naming the decisions below it.
 
 ### 5. Connecting to Live TypeSafe Jev Flagship Model
 
@@ -222,7 +224,7 @@ DECISION=$(echo "$NOTIFY_SERVICEOUTPUT" | jev-ops analyze checkmk --json)
 ACTION=$(echo "$DECISION" | jq -r '.decisions.action.value')
 CONFIDENCE=$(echo "$DECISION" | jq -r '.decisions.action.confidence')
 
-if [[ "$ACTION" == "IGNORE" && $(echo "$CONFIDENCE > 0.85" | bc -l) -eq 1 ]]; then
+if [[ "$ACTION" == "ignore" ]] && jq -e '.decisions.action.confidence > 0.85' <<<"$DECISION" >/dev/null; then
     exit 0 # Suppress noise
 fi
 ```
@@ -236,7 +238,8 @@ Use typed confidence to gate destructive actions in Ansible playbooks:
     name: nginx
     state: restarted
   when:
-    - jev.decisions.needs_attention.value == true
+    - jev.decisions.needs_attention.value
+    - jev.decisions.category.value == 'application'
     - (jev.decisions.category.confidence | float) >= 0.95
 ```
 See [integrations/ansible/auto-remediate.yml](integrations/ansible/auto-remediate.yml).
@@ -293,7 +296,7 @@ gcloud run services update checkout-api --memory 1Gi --quiet
 See [integrations/gcp/cloud-run-triage.sh](integrations/gcp/cloud-run-triage.sh).
 
 ### 8. Terraform Plan Blast-Radius Gate
-Inspect `terraform plan -json` for destructive drops or IAM policy mutations in CI/CD pipelines before merge:
+Summarize `terraform show -json` output and judge it with the `terraform-plan` pack, blocking destructive drops or IAM and network changes before merge. The gate fails closed: if the plan cannot be parsed or analyzed, it blocks.
 ```bash
 terraform show -json tfplan.binary | ./integrations/terraform/plan-triage.sh
 ```
@@ -303,7 +306,7 @@ See [integrations/terraform/plan-triage.sh](integrations/terraform/plan-triage.s
 
 ## Bundled Diagnostic Packs
 
-`jev-ops` ships with 11 standard packs covering cloud platforms, infrastructure layers, and CI/CD:
+`jev-ops` ships with 12 standard packs covering cloud platforms, infrastructure layers, and CI/CD:
 
 | Pack | Focus Area | Key Decisions Evaluated |
 | :--- | :--- | :--- |
@@ -317,6 +320,7 @@ See [integrations/terraform/plan-triage.sh](integrations/terraform/plan-triage.s
 | **`mysql`** | Databases & replicas | `health`, `bottleneck` (connections/deadlock/slow_queries/replication), `severity` |
 | **`checkmk`** | Alert de-noising | `action` (ignore/watch/notify/auto_repair/escalate), `root_domain`, `urgency` |
 | **`ci-canary`** | Deployment verification | `rollout_action` (promote/watch/rollback), `error_spike`, `risk_score` |
+| **`terraform-plan`** | IaC change review | `change_risk`, `blast_radius`, `destroys_stateful_resource` |
 | **`queue-service`** | Custom reference pack | Demonstrates domain customization without Rust code |
 
 ---
@@ -354,6 +358,12 @@ Decisions (4 defined):
   - root_cause: choice (options: scheduling, image_pull, crashloop, resources, networking, storage, application, unknown)
   - needs_attention: boolean (yes/no)
   - severity: score (range: 0 to 5)
+      0: Normal: no errors or anomalies in the signals
+      1: Informational: notable events with no impact on service
+      2: Minor: isolated errors or warnings with no user-visible impact
+      3: Degraded: partial impairment, elevated errors or latency for some users or requests
+      4: Serious: a major component is failing or most requests are affected; urgent action needed
+      5: Critical: outage, data loss or corruption risk, or active security compromise
 
 Instructions:
 Analyze Kubernetes diagnostic output including pod statuses, events, describe outputs, and logs.
@@ -410,6 +420,13 @@ spec:
       type: "score"
       min: 0
       max: 5
+      levels:              # optional: one description per level, min to max
+        - "No backlog; messages processed as they arrive"
+        - "Small backlog that clears on its own"
+        - "Growing backlog; latency noticeable but within SLO"
+        - "Backlog breaching SLO for some consumers"
+        - "Most consumers stalled; SLO breached broadly"
+        - "Processing halted or messages being lost"
 
     page_oncall:
       type: "boolean"
@@ -419,6 +436,12 @@ spec:
     Determine whether processing is healthy or stuck, and whether the oncall
     engineer must be paged immediately.
 ```
+
+Pack rules worth knowing:
+
+- Unknown keys are rejected, so a typo such as `max_byte` fails validation instead of being silently ignored.
+- A `score` may span at most 10 levels (`max - min + 1 <= 10`), matching the TypeSafe API. If `levels` is given, it needs exactly one entry per level.
+- `instructions` are sent to TypeSafe as `analysis_guidance` alongside the input, so rubric details written there reach the model.
 
 ---
 
@@ -462,15 +485,14 @@ jev-ops completion fish > ~/.config/fish/completions/jev-ops.fish
 | `2` | **Invalid CLI Usage** | Unknown argument, missing flag, or bad syntax |
 | `3` | **Invalid Pack** | Pack not found, syntax error, or schema validation failure |
 | `4` | **Invalid Input** | Empty input, input exceeding max bytes, binary garbage, or malformed UTF-8 |
-| `5` | **Provider Failure** | Inference provider failure or timeout |
+| `5` | **Provider Failure** | Inference provider failure or timeout, or no API key when no `--provider` is given |
 | `6` | **Invalid Provider Response** | Provider returned decisions that violate pack schema constraints |
 
 ---
 
 ## Roadmap
 
-- **v2026.09.19 (v0.1)**: Core extensible architecture, external YAML packs, stdin streaming, deterministic mock inference, security limits, fixture tests, GitHub Actions multi-platform releases.
-- **v0.2**: Real TypeSafe Jev API provider (`JevInferenceProvider`) with token authentication and calibrated probability distributions.
+- **v2026.09.19 (v0.1)**: Core extensible architecture, external YAML packs, stdin streaming, live TypeSafe Jev provider, deterministic mock inference, security limits, fixture tests, GitHub Actions multi-platform releases.
 - **v0.3**: Safe, declarative system collectors (Linux `systemd`, `procfs`, `sysfs`).
 - **v0.4**: Container & Kubernetes collectors (`cgroup`, `kubectl`, container runtime sockets).
 - **v0.5**: Remote collection over SSH (`ssh://user@host`).

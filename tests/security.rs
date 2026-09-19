@@ -3,13 +3,20 @@ use predicates::prelude::*;
 use std::fs;
 use tempfile::tempdir;
 
+/// Builds a jev-ops command isolated from any TYPESAFE_API_KEY in the developer's environment.
+fn jev_ops_cmd() -> Command {
+    let mut cmd = Command::cargo_bin("jev-ops").unwrap();
+    cmd.env_remove("TYPESAFE_API_KEY");
+    cmd
+}
+
 use jev_ops::packs::loader::load_manifest;
 use jev_ops::security::limits::MAX_MANIFEST_BYTES;
 use jev_ops::security::validation::{detect_binary, validate_text_input};
 
 #[test]
 fn test_security_huge_input_rejected() {
-    let mut cmd = Command::cargo_bin("jev-ops").unwrap();
+    let mut cmd = jev_ops_cmd();
     cmd.args([
         "analyze",
         "linux",
@@ -24,7 +31,7 @@ fn test_security_huge_input_rejected() {
 
 #[test]
 fn test_security_binary_input_rejected() {
-    let mut cmd = Command::cargo_bin("jev-ops").unwrap();
+    let mut cmd = jev_ops_cmd();
     cmd.args([
         "analyze",
         "linux",
@@ -39,7 +46,7 @@ fn test_security_binary_input_rejected() {
 
 #[test]
 fn test_security_empty_input_rejected() {
-    let mut cmd = Command::cargo_bin("jev-ops").unwrap();
+    let mut cmd = jev_ops_cmd();
     cmd.args(["analyze", "linux"]);
     cmd.write_stdin("");
     cmd.assert()

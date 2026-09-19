@@ -10,6 +10,8 @@ pub fn render_json(result: &PipelineResult) -> Result<String> {
         provider: result.provider.clone(),
         input: result.input.clone(),
         decisions: result.decisions.clone(),
+        min_confidence: result.min_confidence,
+        low_confidence: result.low_confidence_decisions(),
     };
 
     let json = serde_json::to_string_pretty(&output)?;

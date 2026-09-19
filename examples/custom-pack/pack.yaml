@@ -26,6 +26,13 @@ spec:
       type: "score"
       min: 0
       max: 5
+      levels:
+        - "Normal: no errors or anomalies in the signals"
+        - "Informational: notable events with no impact on service"
+        - "Minor: isolated errors or warnings with no user-visible impact"
+        - "Degraded: partial impairment, elevated errors or latency for some users or requests"
+        - "Serious: a major component is failing or most requests are affected; urgent action needed"
+        - "Critical: outage, data loss or corruption risk, or active security compromise"
 
     intervention_required:
       type: "boolean"

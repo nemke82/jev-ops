@@ -13,8 +13,12 @@ kubectl get events -n "${NAMESPACE}" --watch-only --output-watch-events | while 
     if echo "$line" | grep -qE "Warning|BackOff|OOMKilled|Failed"; then
         echo "[jev-ops] Triggering analysis on event: $line" >&2
         
-        # Analyze event against kubernetes pack
-        DECISION=$(echo "$line" | jev-ops analyze kubernetes --json)
+        # Analyze event against kubernetes pack; under `set -e` a failed analysis
+        # (e.g. HTTP 429) would otherwise terminate the whole watch loop.
+        if ! DECISION=$(printf '%s\n' "$line" | jev-ops analyze kubernetes --json); then
+            echo "[jev-ops] Analysis failed for this event; continuing to watch." >&2
+            continue
+        fi
         
         ROOT_CAUSE=$(echo "$DECISION" | jq -r '.decisions.root_cause.value')
         SEVERITY=$(echo "$DECISION" | jq -r '.decisions.severity.value')

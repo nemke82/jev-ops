@@ -1,5 +1,6 @@
 use crate::engine::pipeline::PipelineResult;
 use crate::inference::types::ProviderDecision;
+use crate::packs::manifest::DecisionSpec;
 
 pub fn render_human(result: &PipelineResult) -> String {
     let mut out = String::new();
@@ -22,13 +23,10 @@ pub fn render_human(result: &PipelineResult) -> String {
         let label = format_label(name);
         let val_str = match decision {
             ProviderDecision::Choice { value, .. } => value.clone(),
-            ProviderDecision::Score { value, .. } => {
-                if name.contains("severity") {
-                    format!("{}/5", value)
-                } else {
-                    value.to_string()
-                }
-            }
+            ProviderDecision::Score { value, .. } => match result.decision_specs.get(name) {
+                Some(DecisionSpec::Score { max, .. }) => format!("{}/{}", value, max),
+                _ => value.to_string(),
+            },
             ProviderDecision::Boolean { value, .. } => {
                 if *value {
                     "yes".to_string()

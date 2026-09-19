@@ -36,7 +36,9 @@ jobs:
             binary_name: jev-ops
             use_cross: false
             archive: tar.gz
-          - os: macos-13
+          # Intel macOS runners are being retired; the Apple Silicon runner
+          # cross-compiles x86_64 natively with the Xcode toolchain.
+          - os: macos-latest
             target: x86_64-apple-darwin
             binary_name: jev-ops
             use_cross: false
@@ -82,7 +84,8 @@ jobs:
           cp README.md LICENSE "${STAGE_DIR}/"
           cp -r packs "${STAGE_DIR}/"
           tar -czvf "${ARCHIVE_NAME}.tar.gz" "${STAGE_DIR}"
-          sha256sum "${ARCHIVE_NAME}.tar.gz" > "${ARCHIVE_NAME}.tar.gz.sha256"
+          # shasum ships on both Linux and macOS runners; sha256sum is GNU-only.
+          shasum -a 256 "${ARCHIVE_NAME}.tar.gz" > "${ARCHIVE_NAME}.tar.gz.sha256"
         shell: bash
 
       - name: Package archive (Windows)

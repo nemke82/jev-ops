@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use crate::error::{JevOpsError, Result};
 use crate::packs::loader::load_manifest;
 use crate::packs::manifest::PackManifest;
+use crate::security::validation::validate_pack_name;
 
 #[derive(Debug, Clone)]
 pub struct DiscoveredPack {
@@ -42,8 +43,10 @@ pub fn search_directories(custom_dir: Option<&Path>) -> Vec<PathBuf> {
 
 /// Locates and loads a pack by name according to search precedence.
 pub fn find_pack(name: &str, custom_dir: Option<&Path>) -> Result<(PathBuf, PackManifest)> {
+    // Reject names like "../x" or "/etc/x" before they are joined onto search paths.
+    validate_pack_name(name)?;
+
     let dirs = search_directories(custom_dir);
-    let mut searched_locations = Vec::new();
 
     for dir in &dirs {
         if !dir.is_dir() {
@@ -52,7 +55,6 @@ pub fn find_pack(name: &str, custom_dir: Option<&Path>) -> Result<(PathBuf, Pack
 
         // Candidate 1: dir/<name>/pack.yaml
         let sub_yaml = dir.join(name).join("pack.yaml");
-        searched_locations.push(sub_yaml.display().to_string());
         if sub_yaml.is_file() {
             let manifest = load_manifest(&sub_yaml)?;
             if manifest.metadata.name == name {
@@ -62,7 +64,6 @@ pub fn find_pack(name: &str, custom_dir: Option<&Path>) -> Result<(PathBuf, Pack
 
         // Candidate 2: dir/<name>/pack.yml
         let sub_yml = dir.join(name).join("pack.yml");
-        searched_locations.push(sub_yml.display().to_string());
         if sub_yml.is_file() {
             let manifest = load_manifest(&sub_yml)?;
             if manifest.metadata.name == name {
@@ -72,7 +73,6 @@ pub fn find_pack(name: &str, custom_dir: Option<&Path>) -> Result<(PathBuf, Pack
 
         // Candidate 3: dir/<name>.yaml
         let file_yaml = dir.join(format!("{}.yaml", name));
-        searched_locations.push(file_yaml.display().to_string());
         if file_yaml.is_file() {
             let manifest = load_manifest(&file_yaml)?;
             if manifest.metadata.name == name {
@@ -82,7 +82,6 @@ pub fn find_pack(name: &str, custom_dir: Option<&Path>) -> Result<(PathBuf, Pack
 
         // Candidate 4: dir/<name>.yml
         let file_yml = dir.join(format!("{}.yml", name));
-        searched_locations.push(file_yml.display().to_string());
         if file_yml.is_file() {
             let manifest = load_manifest(&file_yml)?;
             if manifest.metadata.name == name {
@@ -138,15 +137,20 @@ pub fn list_available_packs(custom_dir: Option<&Path>) -> Vec<DiscoveredPack> {
                 };
 
                 if let Some(mp) = manifest_path {
-                    if let Ok(manifest) = load_manifest(&mp) {
-                        packs_by_name.insert(
-                            manifest.metadata.name.clone(),
-                            DiscoveredPack {
-                                name: manifest.metadata.name.clone(),
-                                path: mp,
-                                manifest,
-                            },
-                        );
+                    match load_manifest(&mp) {
+                        Ok(manifest) => {
+                            packs_by_name.insert(
+                                manifest.metadata.name.clone(),
+                                DiscoveredPack {
+                                    name: manifest.metadata.name.clone(),
+                                    path: mp,
+                                    manifest,
+                                },
+                            );
+                        }
+                        Err(e) => {
+                            tracing::warn!("Skipping invalid pack '{}': {}", mp.display(), e);
+                        }
                     }
                 }
             }

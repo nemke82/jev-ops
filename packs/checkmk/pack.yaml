@@ -38,6 +38,13 @@ spec:
       type: "score"
       min: 0
       max: 5
+      levels:
+        - "No action needed: the check is OK or has recovered"
+        - "Low: transient blip or flapping expected to resolve on its own"
+        - "Watch: slow trend that may breach thresholds within days"
+        - "Notify: threshold breached; needs attention during working hours"
+        - "High: service impaired or likely to fail within hours"
+        - "Immediate: service down or failure imminent; page now"
 
     page_oncall:
       type: "boolean"
