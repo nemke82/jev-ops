@@ -74,23 +74,35 @@ jobs:
           fi
         shell: bash
 
-      - name: Package archive (Unix)
+      - name: Package standalone binary and archive (Unix)
         if: matrix.os != 'windows-latest'
         run: |
+          # 1. Pure standalone binary
+          RAW_BINARY="jev-ops-${{ matrix.target }}"
+          cp "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" "${RAW_BINARY}"
+          chmod +x "${RAW_BINARY}"
+          shasum -a 256 "${RAW_BINARY}" > "${RAW_BINARY}.sha256"
+
+          # 2. Archive bundle with docs and packs
           ARCHIVE_NAME="jev-ops-${{ github.ref_name }}-${{ matrix.target }}"
           STAGE_DIR="${ARCHIVE_NAME}"
           mkdir -p "${STAGE_DIR}"
-          cp "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" "${STAGE_DIR}/"
+          cp "${RAW_BINARY}" "${STAGE_DIR}/${{ matrix.binary_name }}"
           cp README.md LICENSE "${STAGE_DIR}/"
           cp -r packs "${STAGE_DIR}/"
           tar -czvf "${ARCHIVE_NAME}.tar.gz" "${STAGE_DIR}"
-          # shasum ships on both Linux and macOS runners; sha256sum is GNU-only.
           shasum -a 256 "${ARCHIVE_NAME}.tar.gz" > "${ARCHIVE_NAME}.tar.gz.sha256"
         shell: bash
 
-      - name: Package archive (Windows)
+      - name: Package standalone binary and archive (Windows)
         if: matrix.os == 'windows-latest'
         run: |
+          # 1. Pure standalone binary
+          $RAW_BINARY = "jev-ops-${{ matrix.target }}.exe"
+          Copy-Item "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" -Destination $RAW_BINARY
+          (Get-FileHash $RAW_BINARY -Algorithm SHA256).Hash.ToLower() + "  $RAW_BINARY" | Out-File -FilePath "${RAW_BINARY}.sha256" -Encoding ascii
+
+          # 2. Archive bundle with docs and packs
           $ARCHIVE_NAME = "jev-ops-${{ github.ref_name }}-${{ matrix.target }}"
           New-Item -ItemType Directory -Path $ARCHIVE_NAME
           Copy-Item "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" -Destination $ARCHIVE_NAME
@@ -104,6 +116,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            jev-ops-${{ matrix.target }}*
             jev-ops-${{ github.ref_name }}-${{ matrix.target }}.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

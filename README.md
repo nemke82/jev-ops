@@ -71,15 +71,33 @@ In accordance with [TypeSafe AI's System One architecture](https://docs.typesafe
 
 ## Installation
 
-### Prebuilt Binaries
+### Standalone Binaries (Direct Install)
 
-Download precompiled binaries for Linux (x86_64, aarch64, musl), macOS (Apple Silicon, Intel), and Windows from the [GitHub Releases](https://github.com/nemke82/jev-ops/releases) page.
+Install pure standalone binaries directly with `curl`:
 
 ```bash
-# Example for Linux x86_64
-curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-v2026.09.19-x86_64-unknown-linux-gnu.tar.gz | tar -xz
-sudo mv jev-ops-v2026.09.19-x86_64-unknown-linux-gnu/jev-ops /usr/local/bin/
+# Linux (x86_64 glibc)
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-unknown-linux-gnu -o /usr/local/bin/jev-ops
+sudo chmod +x /usr/local/bin/jev-ops
+
+# Linux (static musl / Alpine)
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-unknown-linux-musl -o /usr/local/bin/jev-ops
+sudo chmod +x /usr/local/bin/jev-ops
+
+# Linux (ARM64 / aarch64)
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-aarch64-unknown-linux-gnu -o /usr/local/bin/jev-ops
+sudo chmod +x /usr/local/bin/jev-ops
+
+# macOS (Apple Silicon M1/M2/M3/M4)
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-aarch64-apple-darwin -o /usr/local/bin/jev-ops
+sudo chmod +x /usr/local/bin/jev-ops
+
+# macOS (Intel)
+sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-apple-darwin -o /usr/local/bin/jev-ops
+sudo chmod +x /usr/local/bin/jev-ops
 ```
+
+Full release bundles including offline packs are also available on [GitHub Releases](https://github.com/nemke82/jev-ops/releases/tag/v2026.09.19).
 
 ### From Source
 

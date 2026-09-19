@@ -411,27 +411,27 @@ spec:
 
       <div class="features-grid">
         <div class="feature-card">
-          <h3 class="feature-title">🐧 Linux (x86_64 / aarch64)</h3>
+          <h3 class="feature-title">🐧 Linux (x86_64 / musl)</h3>
           <p class="feature-desc" style="margin-bottom: 1rem;">
-            Precompiled glibc and static musl binaries for Debian, Ubuntu, RHEL, Fedora, Alpine.
+            Standalone pure static binary for Debian, Ubuntu, RHEL, Fedora, and Alpine.
           </p>
-          <pre class="release-command"><code>curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-v2026.09.19-x86_64-unknown-linux-gnu.tar.gz | tar -xz</code></pre>
+          <pre class="release-command"><code>sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-unknown-linux-gnu -o /usr/local/bin/jev-ops && sudo chmod +x /usr/local/bin/jev-ops</code></pre>
         </div>
 
         <div class="feature-card">
           <h3 class="feature-title">🍏 macOS (Apple Silicon / Intel)</h3>
           <p class="feature-desc" style="margin-bottom: 1rem;">
-            Native Darwin binaries optimized for M1/M2/M3/M4 Apple Silicon and Intel x86_64 Macs.
+            Standalone native Darwin executable for M1/M2/M3/M4 Apple Silicon Macs.
           </p>
-          <pre class="release-command"><code>curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-v2026.09.19-aarch64-apple-darwin.tar.gz | tar -xz</code></pre>
+          <pre class="release-command"><code>sudo curl -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-aarch64-apple-darwin -o /usr/local/bin/jev-ops && sudo chmod +x /usr/local/bin/jev-ops</code></pre>
         </div>
 
         <div class="feature-card">
-          <h3 class="feature-title">🦀 Build from Source</h3>
+          <h3 class="feature-title">🪟 Windows &amp; Cargo</h3>
           <p class="feature-desc" style="margin-bottom: 1rem;">
-            Zero external C dependencies. Installs cleanly with standard Cargo toolchain.
+            Standalone portable Windows executable or build directly from source.
           </p>
-          <pre class="release-command"><code>cargo install --git https://github.com/nemke82/jev-ops.git</code></pre>
+          <pre class="release-command"><code>curl.exe -fsSL https://github.com/nemke82/jev-ops/releases/download/v2026.09.19/jev-ops-x86_64-pc-windows-msvc.exe -o jev-ops.exe</code></pre>
         </div>
       </div>
     </div>
