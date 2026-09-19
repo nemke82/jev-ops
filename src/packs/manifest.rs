@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 pub const CURRENT_API_VERSION: &str = "jev-ops/v1";
 pub const CURRENT_KIND: &str = "DiagnosticPack";
@@ -52,13 +52,8 @@ impl Default for InputSpec {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum DecisionSpec {
-    Choice {
-        values: Vec<String>,
-    },
-    Score {
-        min: i64,
-        max: i64,
-    },
+    Choice { values: Vec<String> },
+    Score { min: i64, max: i64 },
     Boolean,
 }
 

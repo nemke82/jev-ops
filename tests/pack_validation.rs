@@ -1,9 +1,9 @@
-use std::collections::BTreeMap;
 use jev_ops::packs::manifest::{
-    CURRENT_API_VERSION, CURRENT_KIND, DecisionSpec, InputSpec, PackManifest, PackMetadata,
-    PackSpec,
+    DecisionSpec, InputSpec, PackManifest, PackMetadata, PackSpec, CURRENT_API_VERSION,
+    CURRENT_KIND,
 };
 use jev_ops::packs::validation::validate_manifest;
+use std::collections::BTreeMap;
 
 fn valid_manifest() -> PackManifest {
     let mut decisions = BTreeMap::new();
@@ -13,7 +13,10 @@ fn valid_manifest() -> PackManifest {
             values: vec!["healthy".to_string(), "unhealthy".to_string()],
         },
     );
-    decisions.insert("severity".to_string(), DecisionSpec::Score { min: 0, max: 5 });
+    decisions.insert(
+        "severity".to_string(),
+        DecisionSpec::Score { min: 0, max: 5 },
+    );
     decisions.insert("needs_attention".to_string(), DecisionSpec::Boolean);
 
     PackManifest {

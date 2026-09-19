@@ -129,9 +129,12 @@ impl InferenceProvider for MockInferenceProvider {
                             ("unhealthy".to_string(), 0.96)
                         } else if name == "service" && values.contains(&"ecs".to_string()) {
                             ("ecs".to_string(), 0.98)
-                        } else if name == "root_cause" && values.contains(&"oom_killed".to_string()) {
+                        } else if name == "root_cause" && values.contains(&"oom_killed".to_string())
+                        {
                             ("oom_killed".to_string(), 0.97)
-                        } else if name == "recommended_action" && values.contains(&"ssm_restart".to_string()) {
+                        } else if name == "recommended_action"
+                            && values.contains(&"ssm_restart".to_string())
+                        {
                             ("ssm_restart".to_string(), 0.94)
                         } else {
                             select_fallback_choice(values)
@@ -139,11 +142,17 @@ impl InferenceProvider for MockInferenceProvider {
                     } else if is_azure {
                         if name == "health" && values.contains(&"degraded".to_string()) {
                             ("degraded".to_string(), 0.91)
-                        } else if name == "resource_type" && values.contains(&"app_gateway".to_string()) {
+                        } else if name == "resource_type"
+                            && values.contains(&"app_gateway".to_string())
+                        {
                             ("app_gateway".to_string(), 0.95)
-                        } else if name == "root_cause" && values.contains(&"probe_failure".to_string()) {
+                        } else if name == "root_cause"
+                            && values.contains(&"probe_failure".to_string())
+                        {
                             ("probe_failure".to_string(), 0.93)
-                        } else if name == "recommended_action" && values.contains(&"auto_heal".to_string()) {
+                        } else if name == "recommended_action"
+                            && values.contains(&"auto_heal".to_string())
+                        {
                             ("auto_heal".to_string(), 0.89)
                         } else {
                             select_fallback_choice(values)
@@ -153,9 +162,13 @@ impl InferenceProvider for MockInferenceProvider {
                             ("unhealthy".to_string(), 0.96)
                         } else if name == "service" && values.contains(&"cloud_run".to_string()) {
                             ("cloud_run".to_string(), 0.97)
-                        } else if name == "root_cause" && values.contains(&"container_exited_137".to_string()) {
+                        } else if name == "root_cause"
+                            && values.contains(&"container_exited_137".to_string())
+                        {
                             ("container_exited_137".to_string(), 0.96)
-                        } else if name == "recommended_action" && values.contains(&"restart_revision".to_string()) {
+                        } else if name == "recommended_action"
+                            && values.contains(&"restart_revision".to_string())
+                        {
                             ("restart_revision".to_string(), 0.92)
                         } else {
                             select_fallback_choice(values)
@@ -202,7 +215,13 @@ impl InferenceProvider for MockInferenceProvider {
                 DecisionSpec::Boolean => {
                     let (val, conf) = if is_ext4 {
                         (true, 0.99)
-                    } else if is_oom || is_k8s_oom || is_k8s_crashloop || is_aws || is_azure || is_gcp {
+                    } else if is_oom
+                        || is_k8s_oom
+                        || is_k8s_crashloop
+                        || is_aws
+                        || is_azure
+                        || is_gcp
+                    {
                         (true, 0.98)
                     } else if is_ssh_brute {
                         (true, 0.92)

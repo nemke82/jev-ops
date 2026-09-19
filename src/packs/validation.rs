@@ -1,8 +1,8 @@
-use std::collections::HashSet;
 use semver::Version;
+use std::collections::HashSet;
 
 use crate::error::{JevOpsError, Result};
-use crate::packs::manifest::{CURRENT_API_VERSION, CURRENT_KIND, DecisionSpec, PackManifest};
+use crate::packs::manifest::{DecisionSpec, PackManifest, CURRENT_API_VERSION, CURRENT_KIND};
 use crate::security::limits::{
     ABSOLUTE_MAX_INPUT_BYTES, MAX_CHOICE_VALUES_COUNT, MAX_DECISION_COUNT, MAX_INSTRUCTIONS_BYTES,
 };
@@ -160,8 +160,8 @@ pub fn validate_manifest(manifest: &PackManifest) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::BTreeMap;
     use crate::packs::manifest::{InputSpec, PackMetadata, PackSpec};
+    use std::collections::BTreeMap;
 
     fn make_valid_manifest() -> PackManifest {
         let mut decisions = BTreeMap::new();
@@ -171,7 +171,10 @@ mod tests {
                 values: vec!["healthy".to_string(), "unhealthy".to_string()],
             },
         );
-        decisions.insert("severity".to_string(), DecisionSpec::Score { min: 0, max: 5 });
+        decisions.insert(
+            "severity".to_string(),
+            DecisionSpec::Score { min: 0, max: 5 },
+        );
         decisions.insert("needs_attention".to_string(), DecisionSpec::Boolean);
 
         PackManifest {
@@ -206,7 +209,10 @@ mod tests {
         );
         let res = validate_manifest(&m);
         assert!(res.is_err());
-        assert!(res.unwrap_err().to_string().contains("score minimum (5) must be lower than maximum (3)"));
+        assert!(res
+            .unwrap_err()
+            .to_string()
+            .contains("score minimum (5) must be lower than maximum (3)"));
     }
 
     #[test]
@@ -220,6 +226,9 @@ mod tests {
         );
         let res = validate_manifest(&m);
         assert!(res.is_err());
-        assert!(res.unwrap_err().to_string().contains("duplicate choice value"));
+        assert!(res
+            .unwrap_err()
+            .to_string()
+            .contains("duplicate choice value"));
     }
 }

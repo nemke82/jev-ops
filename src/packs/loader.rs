@@ -52,7 +52,11 @@ pub fn load_manifest(path: &Path) -> Result<PackManifest> {
     }
 
     let bytes = fs::read(&resolved_path).map_err(|e| {
-        JevOpsError::InvalidPack(format!("Failed to read '{}': {}", resolved_path.display(), e))
+        JevOpsError::InvalidPack(format!(
+            "Failed to read '{}': {}",
+            resolved_path.display(),
+            e
+        ))
     })?;
 
     let content = validate_text_input(&bytes).map_err(|e| {
@@ -63,12 +67,11 @@ pub fn load_manifest(path: &Path) -> Result<PackManifest> {
         ))
     })?;
 
-    let manifest: PackManifest = serde_yaml::from_str(content).map_err(|e| {
-        JevOpsError::PackValidation {
+    let manifest: PackManifest =
+        serde_yaml::from_str(content).map_err(|e| JevOpsError::PackValidation {
             path: resolved_path.clone(),
             details: format!("YAML parsing error: {}", e),
-        }
-    })?;
+        })?;
 
     validate_manifest(&manifest).map_err(|e| JevOpsError::PackValidation {
         path: resolved_path,

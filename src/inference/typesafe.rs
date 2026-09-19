@@ -1,7 +1,7 @@
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::thread;
 use std::time::Duration;
-use serde::{Deserialize, Serialize};
 
 use crate::error::{JevOpsError, Result};
 use crate::inference::provider::InferenceProvider;
@@ -23,8 +23,8 @@ impl TypeSafeJevProvider {
     pub fn new(api_key: String) -> Self {
         let base_url = std::env::var("TYPESAFE_API_URL")
             .unwrap_or_else(|_| DEFAULT_TYPESAFE_API_URL.to_string());
-        let model = std::env::var("TYPESAFE_MODEL")
-            .unwrap_or_else(|_| DEFAULT_TYPESAFE_MODEL.to_string());
+        let model =
+            std::env::var("TYPESAFE_MODEL").unwrap_or_else(|_| DEFAULT_TYPESAFE_MODEL.to_string());
 
         Self {
             api_key,
@@ -160,12 +160,11 @@ impl InferenceProvider for TypeSafeJevProvider {
 
             match response {
                 Ok(resp) => {
-                    let parsed: SystemOneApiResponse = resp.into_json().map_err(|e| {
-                        JevOpsError::ProviderError {
+                    let parsed: SystemOneApiResponse =
+                        resp.into_json().map_err(|e| JevOpsError::ProviderError {
                             provider: self.name().to_string(),
                             details: format!("Failed to parse TypeSafe API response JSON: {}", e),
-                        }
-                    })?;
+                        })?;
                     break parsed;
                 }
                 Err(ureq::Error::Status(status, resp)) => {
@@ -189,7 +188,9 @@ impl InferenceProvider for TypeSafeJevProvider {
                     if attempts <= self.max_retries {
                         tracing::warn!(
                             "Network transport error: {}. Retrying attempt {}/{}...",
-                            transport_err, attempts, self.max_retries
+                            transport_err,
+                            attempts,
+                            self.max_retries
                         );
                         thread::sleep(Duration::from_secs(1));
                         continue;
@@ -214,14 +215,26 @@ impl InferenceProvider for TypeSafeJevProvider {
             })?;
 
             let decision = match (spec, answer) {
-                (DecisionSpec::Choice { .. }, ApiAnswer::Choice { choice, confidence, probabilities }) => {
-                    ProviderDecision::Choice {
-                        value: choice.clone(),
-                        confidence: *confidence,
-                        probabilities: probabilities.clone(),
-                    }
-                }
-                (DecisionSpec::Score { min, max }, ApiAnswer::Score { score, confidence, probabilities }) => {
+                (
+                    DecisionSpec::Choice { .. },
+                    ApiAnswer::Choice {
+                        choice,
+                        confidence,
+                        probabilities,
+                    },
+                ) => ProviderDecision::Choice {
+                    value: choice.clone(),
+                    confidence: *confidence,
+                    probabilities: probabilities.clone(),
+                },
+                (
+                    DecisionSpec::Score { min, max },
+                    ApiAnswer::Score {
+                        score,
+                        confidence,
+                        probabilities,
+                    },
+                ) => {
                     let rounded = score.round() as i64;
                     let clamped = rounded.max(*min).min(*max);
                     ProviderDecision::Score {

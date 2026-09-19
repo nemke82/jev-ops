@@ -23,7 +23,11 @@ pub fn read_input(input_path: Option<&Path>, max_bytes: usize) -> Result<InputDa
             )));
         }
         let file = File::open(path).map_err(|e| {
-            JevOpsError::Input(format!("Failed to open input file '{}': {}", path.display(), e))
+            JevOpsError::Input(format!(
+                "Failed to open input file '{}': {}",
+                path.display(),
+                e
+            ))
         })?;
         let mut handle = file.take((max_bytes + 1) as u64);
         handle.read_to_end(&mut buffer)?;

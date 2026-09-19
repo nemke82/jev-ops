@@ -18,16 +18,10 @@ pub enum JevOpsError {
     Cli(String),
 
     #[error("Diagnostic pack '{name}' not found. Searched in: {searched}")]
-    PackNotFound {
-        name: String,
-        searched: String,
-    },
+    PackNotFound { name: String, searched: String },
 
     #[error("Invalid pack '{path}':\n{details}")]
-    PackValidation {
-        path: PathBuf,
-        details: String,
-    },
+    PackValidation { path: PathBuf, details: String },
 
     #[error("Pack error: {0}")]
     InvalidPack(String),
@@ -36,10 +30,7 @@ pub enum JevOpsError {
     Input(String),
 
     #[error("Input too large ({bytes} bytes exceeds limit of {max_bytes} bytes)")]
-    InputTooLarge {
-        bytes: usize,
-        max_bytes: usize,
-    },
+    InputTooLarge { bytes: usize, max_bytes: usize },
 
     #[error("Input is empty. Provide diagnostic data via stdin or --input")]
     EmptyInput,
@@ -51,10 +42,7 @@ pub enum JevOpsError {
     BinaryContentDetected,
 
     #[error("Inference provider '{provider}' failure: {details}")]
-    ProviderError {
-        provider: String,
-        details: String,
-    },
+    ProviderError { provider: String, details: String },
 
     #[error("Invalid provider response against pack schema: {0}")]
     InvalidProviderResponse(String),

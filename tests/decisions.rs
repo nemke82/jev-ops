@@ -7,7 +7,15 @@ use jev_ops::packs::manifest::DecisionSpec;
 #[test]
 fn test_decision_linux_oom() {
     let fixture = "tests/fixtures/linux/oom.txt";
-    let res = run_pipeline("linux", Some(std::path::Path::new(fixture)), None, None, None, None).unwrap();
+    let res = run_pipeline(
+        "linux",
+        Some(std::path::Path::new(fixture)),
+        None,
+        None,
+        None,
+        None,
+    )
+    .unwrap();
 
     let cat = match &res.decisions["category"] {
         ProviderDecision::Choice { value, .. } => value.as_str(),
@@ -37,7 +45,15 @@ fn test_decision_linux_oom() {
 #[test]
 fn test_decision_linux_ext4() {
     let fixture = "tests/fixtures/linux/ext4-error.txt";
-    let res = run_pipeline("linux", Some(std::path::Path::new(fixture)), None, None, None, None).unwrap();
+    let res = run_pipeline(
+        "linux",
+        Some(std::path::Path::new(fixture)),
+        None,
+        None,
+        None,
+        None,
+    )
+    .unwrap();
 
     let cat = match &res.decisions["category"] {
         ProviderDecision::Choice { value, .. } => value.as_str(),
@@ -55,7 +71,15 @@ fn test_decision_linux_ext4() {
 #[test]
 fn test_decision_linux_ssh_bruteforce() {
     let fixture = "tests/fixtures/linux/ssh-bruteforce.txt";
-    let res = run_pipeline("linux", Some(std::path::Path::new(fixture)), None, None, None, None).unwrap();
+    let res = run_pipeline(
+        "linux",
+        Some(std::path::Path::new(fixture)),
+        None,
+        None,
+        None,
+        None,
+    )
+    .unwrap();
 
     let cat = match &res.decisions["category"] {
         ProviderDecision::Choice { value, .. } => value.as_str(),
@@ -67,8 +91,15 @@ fn test_decision_linux_ssh_bruteforce() {
 #[test]
 fn test_decision_kubernetes_crashloop() {
     let fixture = "tests/fixtures/kubernetes/crashloop.txt";
-    let res =
-        run_pipeline("kubernetes", Some(std::path::Path::new(fixture)), None, None, None, None).unwrap();
+    let res = run_pipeline(
+        "kubernetes",
+        Some(std::path::Path::new(fixture)),
+        None,
+        None,
+        None,
+        None,
+    )
+    .unwrap();
 
     let cause = match &res.decisions["root_cause"] {
         ProviderDecision::Choice { value, .. } => value.as_str(),
@@ -80,8 +111,15 @@ fn test_decision_kubernetes_crashloop() {
 #[test]
 fn test_decision_kubernetes_oomkilled() {
     let fixture = "tests/fixtures/kubernetes/oomkilled.txt";
-    let res =
-        run_pipeline("kubernetes", Some(std::path::Path::new(fixture)), None, None, None, None).unwrap();
+    let res = run_pipeline(
+        "kubernetes",
+        Some(std::path::Path::new(fixture)),
+        None,
+        None,
+        None,
+        None,
+    )
+    .unwrap();
 
     let cause = match &res.decisions["root_cause"] {
         ProviderDecision::Choice { value, .. } => value.as_str(),
@@ -93,7 +131,15 @@ fn test_decision_kubernetes_oomkilled() {
 #[test]
 fn test_decision_healthy() {
     let fixture = "tests/fixtures/linux/healthy.txt";
-    let res = run_pipeline("linux", Some(std::path::Path::new(fixture)), None, None, None, None).unwrap();
+    let res = run_pipeline(
+        "linux",
+        Some(std::path::Path::new(fixture)),
+        None,
+        None,
+        None,
+        None,
+    )
+    .unwrap();
 
     let health = match &res.decisions["health"] {
         ProviderDecision::Choice { value, .. } => value.as_str(),
@@ -141,7 +187,10 @@ fn test_provider_schema_enforcement_bad_choice() {
 #[test]
 fn test_provider_schema_enforcement_bad_score() {
     let mut expected = BTreeMap::new();
-    expected.insert("severity".to_string(), DecisionSpec::Score { min: 0, max: 5 });
+    expected.insert(
+        "severity".to_string(),
+        DecisionSpec::Score { min: 0, max: 5 },
+    );
 
     let mut actual = BTreeMap::new();
     actual.insert(
@@ -172,5 +221,7 @@ fn test_provider_schema_enforcement_bad_confidence() {
     );
 
     let err = validate_provider_response(&expected, &actual).unwrap_err();
-    assert!(err.to_string().contains("outside the valid [0.0, 1.0] range"));
+    assert!(err
+        .to_string()
+        .contains("outside the valid [0.0, 1.0] range"));
 }

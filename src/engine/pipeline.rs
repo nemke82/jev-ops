@@ -160,13 +160,19 @@ mod tests {
 
         let res = validate_provider_response(&expected, &actual);
         assert!(res.is_err());
-        assert!(res.unwrap_err().to_string().contains("not in allowed pack values"));
+        assert!(res
+            .unwrap_err()
+            .to_string()
+            .contains("not in allowed pack values"));
     }
 
     #[test]
     fn test_validate_response_score_out_of_range() {
         let mut expected = BTreeMap::new();
-        expected.insert("severity".to_string(), DecisionSpec::Score { min: 0, max: 5 });
+        expected.insert(
+            "severity".to_string(),
+            DecisionSpec::Score { min: 0, max: 5 },
+        );
 
         let mut actual = BTreeMap::new();
         actual.insert(
@@ -180,6 +186,9 @@ mod tests {
 
         let res = validate_provider_response(&expected, &actual);
         assert!(res.is_err());
-        assert!(res.unwrap_err().to_string().contains("score 8 is outside allowed range"));
+        assert!(res
+            .unwrap_err()
+            .to_string()
+            .contains("score 8 is outside allowed range"));
     }
 }

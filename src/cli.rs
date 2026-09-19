@@ -1,6 +1,6 @@
-use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 use clap_complete::Shell;
+use std::path::PathBuf;
 
 pub const VERSION_STRING: &str = "v2026.09.19";
 

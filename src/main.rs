@@ -1,6 +1,6 @@
+use clap::{CommandFactory, Parser};
 use std::io;
 use std::process;
-use clap::{CommandFactory, Parser};
 use tracing_subscriber::EnvFilter;
 
 use jev_ops::cli::{Cli, Commands, PacksCommands, VERSION_STRING};
@@ -102,7 +102,10 @@ fn run(cli: Cli) -> Result<()> {
                     println!("No diagnostic packs found.");
                 } else {
                     println!("AVAILABLE DIAGNOSTIC PACKS:");
-                    println!("{:<18} {:<10} {:<40} PATH", "NAME", "VERSION", "DESCRIPTION");
+                    println!(
+                        "{:<18} {:<10} {:<40} PATH",
+                        "NAME", "VERSION", "DESCRIPTION"
+                    );
                     println!("{}", "─".repeat(80));
                     for p in available_packs {
                         let desc = if p.manifest.metadata.description.len() > 38 {
@@ -121,7 +124,11 @@ fn run(cli: Cli) -> Result<()> {
                 }
                 Ok(())
             }
-            PacksCommands::Show { pack, pack_dir, json } => {
+            PacksCommands::Show {
+                pack,
+                pack_dir,
+                json,
+            } => {
                 let (path, manifest) = packs::discovery::find_pack(&pack, pack_dir.as_deref())?;
 
                 if json {
@@ -167,7 +174,10 @@ fn run(cli: Cli) -> Result<()> {
             }
             PacksCommands::New { name, dir } => {
                 let path = packs::scaffold::scaffold_pack(&name, dir.as_deref())?;
-                println!("✓ Scaffolded diagnostic pack template at '{}'", path.display());
+                println!(
+                    "✓ Scaffolded diagnostic pack template at '{}'",
+                    path.display()
+                );
                 Ok(())
             }
         },
