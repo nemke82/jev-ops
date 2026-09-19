@@ -70,3 +70,13 @@ fn test_list_available_packs() {
     assert!(names.contains(&"kubernetes".to_string()));
     assert!(names.contains(&"example".to_string()));
 }
+
+#[test]
+fn test_builtin_fallback_when_packs_dir_missing() {
+    // Verifies that standard packs resolve even when searching in a non-existent directory
+    let fake_empty_dir = PathBuf::from("/tmp/nonexistent-jev-ops-test-dir");
+    let (path, manifest) = find_pack("linux", Some(&fake_empty_dir)).unwrap();
+    assert_eq!(manifest.metadata.name, "linux");
+    // If not found in the custom dir or ./packs, path is embedded
+    assert!(path.display().to_string().contains("linux"));
+}

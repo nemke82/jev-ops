@@ -340,3 +340,16 @@ fn test_cli_pack_name_path_traversal_rejected() {
         .code(3)
         .stderr(predicate::str::contains("invalid characters"));
 }
+
+#[test]
+fn test_cli_standalone_execution_without_local_packs_dir() {
+    let empty_dir = tempdir().unwrap();
+    let mut cmd = jev_ops_cmd();
+    cmd.current_dir(empty_dir.path());
+    cmd.args(["analyze", "linux", "--provider", "mock"]);
+    cmd.write_stdin("Mar 24 10:00:00 srv kernel: [123.456] EXT4-fs error (device sda1): ext4_lookup: deleted inode referenced: 1572865\n");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Pack:       linux"))
+        .stdout(predicate::str::contains("unhealthy"));
+}

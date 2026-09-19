@@ -2,7 +2,8 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use crate::error::{JevOpsError, Result};
-use crate::packs::loader::load_manifest;
+use crate::packs::builtin::{get_builtin_pack, BUILTIN_PACKS};
+use crate::packs::loader::{load_manifest, load_manifest_from_str};
 use crate::packs::manifest::PackManifest;
 use crate::security::validation::validate_pack_name;
 
@@ -42,6 +43,7 @@ pub fn search_directories(custom_dir: Option<&Path>) -> Vec<PathBuf> {
 }
 
 /// Locates and loads a pack by name according to search precedence.
+/// Checks filesystem search directories first, then falls back to compiled-in standard packs.
 pub fn find_pack(name: &str, custom_dir: Option<&Path>) -> Result<(PathBuf, PackManifest)> {
     // Reject names like "../x" or "/etc/x" before they are joined onto search paths.
     validate_pack_name(name)?;
@@ -90,6 +92,12 @@ pub fn find_pack(name: &str, custom_dir: Option<&Path>) -> Result<(PathBuf, Pack
         }
     }
 
+    // Fallback: Check compiled-in standard diagnostic packs
+    if let Some(res) = get_builtin_pack(name) {
+        let manifest = res?;
+        return Ok((PathBuf::from(format!("<embedded:{}>", name)), manifest));
+    }
+
     Err(JevOpsError::PackNotFound {
         name: name.to_string(),
         searched: dirs
@@ -100,11 +108,27 @@ pub fn find_pack(name: &str, custom_dir: Option<&Path>) -> Result<(PathBuf, Pack
     })
 }
 
-/// Discovers all available packs across all search directories.
-/// Higher precedence directories override lower precedence packs with the same name.
+/// Discovers all available packs across all search directories and compiled-in packs.
+/// Higher precedence directories override lower precedence packs and compiled-in packs with the same name.
 pub fn list_available_packs(custom_dir: Option<&Path>) -> Vec<DiscoveredPack> {
     let dirs = search_directories(custom_dir);
     let mut packs_by_name: BTreeMap<String, DiscoveredPack> = BTreeMap::new();
+
+    // 0. Seed with compiled-in builtin packs (lowest precedence)
+    for builtin in BUILTIN_PACKS {
+        if let Ok(manifest) =
+            load_manifest_from_str(builtin.yaml_content, &format!("<embedded:{}>", builtin.name))
+        {
+            packs_by_name.insert(
+                manifest.metadata.name.clone(),
+                DiscoveredPack {
+                    name: manifest.metadata.name.clone(),
+                    path: PathBuf::from(format!("<embedded:{}>", builtin.name)),
+                    manifest,
+                },
+            );
+        }
+    }
 
     // Iterate in reverse order so higher-precedence directories overwrite lower ones
     for dir in dirs.iter().rev() {

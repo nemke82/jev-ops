@@ -80,3 +80,26 @@ pub fn load_manifest(path: &Path) -> Result<PackManifest> {
 
     Ok(manifest)
 }
+
+/// Parses and validates a pack manifest from a YAML string in memory.
+pub fn load_manifest_from_str(content: &str, virtual_name: &str) -> Result<PackManifest> {
+    if content.len() > MAX_MANIFEST_BYTES {
+        return Err(JevOpsError::InvalidPack(format!(
+            "Pack manifest '{}' size exceeds limit of {} bytes",
+            virtual_name, MAX_MANIFEST_BYTES
+        )));
+    }
+
+    let manifest: PackManifest =
+        serde_yaml::from_str(content).map_err(|e| JevOpsError::PackValidation {
+            path: PathBuf::from(virtual_name),
+            details: format!("YAML parsing error: {}", e),
+        })?;
+
+    validate_manifest(&manifest).map_err(|e| JevOpsError::PackValidation {
+        path: PathBuf::from(virtual_name),
+        details: e.to_string(),
+    })?;
+
+    Ok(manifest)
+}
